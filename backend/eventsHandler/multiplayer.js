@@ -1,5 +1,8 @@
     import { readFile } from 'fs/promises';
-    import { setDadosSala, getDadosSala } from './gerenciamento.salas.js';
+    import { setDadosSala, getDadosSala, deleteDadosSala } from './gerenciamento.salas.js';
+
+
+
 
 
     async function gerarPalavrasAleatorias(quantidadeRodadas){
@@ -50,18 +53,35 @@
 
             socket.join(nomeDaSala);
 
-            if (privacidade === 'privada') {
+            if (privacidade === 'fechada') {
 
                 const chave = gerarChaveSalaPrivada();
 
                 setDadosSala(nomeDaSala, {
+
                     palavras: palavrasEscolhidas,
                     status: 'aberta',
                     quantidadeJogadores: 1,
                     rodada: rodadas,
                     chaveSalaPrivada: chave,
                     nomeJogadores: [nomeUsuario],
-                    rankingSala: []
+                    dono: nomeUsuario,
+                    respostaJogadores:{
+                        resposta:null,
+                        tempo: null
+                    },
+                    rankingSala: [
+                        {
+                            nomeJogador:nomeUsuario,
+                            quantidadePontos: 0
+                        }
+                    ],
+                    vencedor: {
+                        nomeJogador: null,
+                        rodada: null,
+                        tempo: null
+                    }
+
                 });
 
                 return {
@@ -74,12 +94,29 @@
             } else {
 
                 setDadosSala(nomeDaSala, {
+
                     palavras: palavrasEscolhidas,
                     status: 'aberta',
                     quantidadeJogadores: 1,
                     rodada: rodadas,
                     nomeJogadores: [nomeUsuario],
-                    rankingSala: []
+                    dono:nomeUsuario,
+                    respostaJogadores:{
+                        resposta: null,
+                        tempo: null
+                    },
+                    rankingSala: [
+                        {
+                            nomeJogador:nomeUsuario,
+                            quantidadePontos: 0
+                        }
+                    ],
+                    vencedor: {
+                        nomeJogador: null,
+                        rodada: null,
+                        tempo: null
+                    }
+
                 });
 
                 return {
@@ -92,17 +129,68 @@
         });
 
 
-        io.on('entrarSalaMultiplayer', (nomeDaSala) => {
-            socket.join(nomeDaSala);
+        io.on('entrarSalaMultiplayer', (nomeDaSala,chave) => {
+            
+            const dadosSala = getDadosSala(nomeDaSala);
+
+            if(chave && chave === dadosSala.chave){
+                socket.join(nomeDaSala);
+                dadosSala.quantidadeJogadores++;
+
+                return 'Você entrou na sala fechada';                
+            }else if(!chave){
+                socket.join(nomeDaSala);
+                dadosSala.quantidadeJogadores++;
+
+                return 'Você entrou na sala aberta';
+            }
+
+            return 'Não foi possível entrar na sala, tente novamente';
         });
 
 
-        io.on('sairSalaMultiplayer', (nomeDaSala) => {
+        io.on('sairSalaMultiplayer', (nomeDaSala, nomeJogador) => {
             socket.leave(nomeDaSala);
+            socket.to(nomeDaSala).emit('jogadorDesconectado',`Jogador ${nomeJogador} se desconectou`);
+
+            const dadosSala = getDadosSala(nomeDaSala);
+
+            if(dadosSala.quantidade <= 0){
+                deleteDadosSala(nomeDaSala);
+            }else{
+                dadosSala.quantidade--;
+            }
+
+            return 'Você se desconectou da sala';
         });
 
 
-        io.on('verificarPalavraMultiplayer', (palavraJogador) => {
+        io.on('verificarPalavraMultiplayer', (palavraJogador, nomeJogador, rodada) => {
+            const dadosSala = getDadosSala(nomeDaSala);
+
+            if(
+                rodada === dadosSala.rodada && 
+                palavraJogador === dadosSala.palavraEscolhida[rodada-1]
+            ){
+                //Irei fazer mais tarde
+            }
+        });
+
+
+        io.on('iniciarPartidaMultiplayer', (nomeDaSala, nomeJogador) => {
+            const dadosSala = getDadosSala(nomeDaSala);
+
+            if(dadosSala.dono !== nomeJogador){
+                return 'Apenas o dono pode iniciar a partida';
+            }
+
+            if(dadosSala.quantidadeJogadores > 1){
+                dadosSala.status = 'em progresso';
+
+                //Irei fazer mais tarde
+                socket.to(nomeDaSala).emit
+            }
+
 
         });
     }
