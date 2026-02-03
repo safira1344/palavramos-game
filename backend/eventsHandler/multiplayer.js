@@ -2,9 +2,6 @@
     import { setDadosSala, getDadosSala, deleteDadosSala } from './gerenciamento.salas.js';
 
 
-
-
-
     async function gerarPalavrasAleatorias(quantidadeRodadas){
 
         const palavras = await readFile('../database/db.txt','utf-8');
@@ -34,6 +31,42 @@
         }
 
         return resultado;
+    }
+
+
+    function verificarPalavraOrdemEQuantidadeAcertos(palavraJogador, palavraCorreta){
+        const tentativa = palavraJogador.toUpperCase().split('');
+        const alvo = palavraCorreta.toUpperCase().split('');
+
+        let acumuladorQuantidade = 0;
+        let acumuladorOrdem = 0;
+
+        //Calcula quantos estão na ordem certa
+        for(let indiceTentativa = 0; indiceTentativa < alvo.length; indiceTentativa++){
+            if(tentativa[indiceTentativa] === alvo[indiceTentativa]){
+                acumuladorOrdem++;
+
+                tentativa[indiceTentativa] = null;
+                alvo[indiceTentativa] = null;
+            }
+        }
+
+        //Calcula quantidade de acertos mas em posições incorretas
+        for(let indiceTentativa = 0; indiceTentativa < alvo.length; indiceTentativa++){
+            if(tentativa[indiceTentativa] !== null){
+                for(let indiceAlvo = 0; indiceAlvo < alvo.length; indiceAlvo++){
+                    if(alvo[indiceAlvo] !== null && tentativa[indiceTentativa] === alvo[indiceAlvo]){
+                        acumuladorQuantidade++;
+                        
+                        alvo[indiceAlvo] = null;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return `Existem ${acumuladorOrdem} letras na ordem correta e ${acumuladorQuantidade} estão certas mas no local errado`;
+
     }
 
 
@@ -165,15 +198,24 @@
         });
 
 
-        io.on('verificarPalavraMultiplayer', (palavraJogador, nomeJogador, rodada) => {
+        io.on('verificarPalavraMultiplayer', (palavraJogador, nomeJogador, rodada, tempo) => {
             const dadosSala = getDadosSala(nomeDaSala);
+            const tentativa = palavraJogador.toUpperCase();
+            const alvo = dadosSala.palavraEscolhida[rodada-1].toUpperCase();
 
             if(
-                rodada === dadosSala.rodada && 
-                palavraJogador === dadosSala.palavraEscolhida[rodada-1]
+                rodada === dadosSala.rodada[rodada-1] && 
+                tentativa === alvo
             ){
-                //Irei fazer mais tarde
+                dadosSala.vencedor.nomeJogador = nomeJogador;
+                dadosSala.vencedor.rodada = rodada;
+                dadosSala.vencedor.tempo = tempo;
+
+                return `Jogador ${nomeJogador} venceu a rodada`;
+            }else{
+                verificarPalavraOrdemEQuantidadeAcertos(tentativa,alvo);
             }
+
         });
 
 
@@ -187,7 +229,9 @@
             if(dadosSala.quantidadeJogadores > 1){
                 dadosSala.status = 'em progresso';
 
-                //Irei fazer mais tarde
+                //Haver contagem do tempo.
+                let tempo = 0;
+
                 socket.to(nomeDaSala).emit
             }
 
