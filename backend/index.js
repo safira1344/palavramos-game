@@ -1,27 +1,57 @@
-    import { createServer }  from 'http';
-    import { gerenciarPartidaMultiplayer } from './eventsHandler/multiplayer.js';
-    import { Server } from 'socket.io';
-    
-    const httpServer = createServer(); 
-    const io = new Server(httpServer,{
-        cors:{
-            origin:
-                '*',
-        },
-        path:'/socket.io/'
+import net from 'node:net';
+import { rotearEventos } from './Roteador/RoteadorEventos.js';
+import { clientesConectados, salasAtivas } from './Estados/EstadoGlobal.js';
+import { Jogador } from './Entidades/Jogadores.js';
+
+    const porta = 3100;
+    const enderecoIp = '127.0.0.1';
+
+    const socketServer = net.createServer((socket) => {
     });
 
-    io.on("connection",(socket) => {
-        console.log('Socket.io conectado');
-        gerenciarPartidaMultiplayer(socket,io);
+    socketServer.on('connection', (socket) => {
+    
+        console.log(`${socket.remoteAddress} está ouvindo eventos do servidor na porta ${socket.remotePort}`);
 
-        socket.on('disconnect',(socket) => {
-        socket.disconnect();
+        socket.setEncoding('utf-8');
+        
+        const idJogador = crypto.randomUUID();
+
+        const jogador = new Jogador(
+            {
+            id: idJogador,
+            socket: socket,
+            nome: `Convidado-${idJogador.substring(0,4)}`,
+            }
+        );
+
+        clientesConectados.set(idJogador,jogador);
+
+        socket.on('data', (dados) => {
+            const dadosBrutos = dados.toString().trim();
+
+            if(!dadosBrutos) return;
+
+            const dadosJson = JSON.parse(dadosBrutos); 
+
+            const roteamentoDados = 
+            {
+                evento: dadosJson.evento,
+                dados: dadosJson.dados
+            };
+
+            rotearEventos(roteamentoDados,jogador);
+
         });
 
+        socket.on('end', () => {
+            clientesConectados.delete(idJogador);
+        });
+
+        //Também colocar depois um try catch na conexão
+        //Posteriormente cuidar de timeout de jogador para reconecta-lo na sala correta.
     });
 
-
-    httpServer.listen(7000);
-
-
+    socketServer.listen(porta, enderecoIp,() => {
+        console.log(`Servidor escutando socket em:${enderecoIp}:${porta} `);
+    });
