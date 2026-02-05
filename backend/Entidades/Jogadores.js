@@ -12,10 +12,12 @@ export class Jogador{
         this.socket = socket;
         this.nome = nome;
         this.dono = dono;
+        this.status = '';
     }
 
     enviar(evento,dados){
         const pacote = JSON.stringify({evento,dados}) + '\n';
+        this.socket.write(evento,dados);
     }
 
 }

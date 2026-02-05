@@ -1,4 +1,4 @@
-import { criarPartidaMultiplayer } from "../Eventos/MultiplayerCentralizado.js";
+import { criarPartidaMultiplayer, entrarSalaMultiplayer, sairSalaMultiplayer } from "../Eventos/MultiplayerCentralizado.js";
 
 
 export function rotearEventos(roteamentoDados,jogador){
@@ -19,12 +19,22 @@ export function rotearEventos(roteamentoDados,jogador){
         
         case 'entrar_sala_multiplayer':
             const parametrosEntrarSalaMultiplayer = {
-                nome: roteamentoDados.dados.nomeSala,
+                idSala: roteamentoDados.dados.idSala,
                 chave: roteamentoDados.dados.chave,
                 jogador: jogador
             };
 
-            
+            entrarSalaMultiplayer(parametrosEntrarSalaMultiplayer);            
+
+            break;
+        
+        case 'sair_sala_multiplayer':
+            const parametrosSairSalaMultiplayer = {
+                idSala: roteamentoDados.dados.idSala,
+                jogador: jogador
+            };
+
+            sairSalaMultiplayer(parametrosSairSalaMultiplayer);
 
             break;
     }

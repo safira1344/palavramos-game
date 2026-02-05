@@ -89,4 +89,10 @@ export class Sala {
 
     }
 
+    calcularVencedor(rodadas){
+        const jogadoresPontos = this.vencedor.forEach();
+
+
+    }
+
 }
