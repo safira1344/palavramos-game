@@ -17,7 +17,7 @@ export class Jogador{
 
     enviar(evento,dados){
         const pacote = JSON.stringify({evento,dados}) + '\n';
-        this.socket.write(evento,dados);
+        this.socket.write(pacote);
     }
 
 }
