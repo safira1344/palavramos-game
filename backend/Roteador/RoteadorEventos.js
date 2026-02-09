@@ -1,5 +1,11 @@
-import { criarPartidaMultiplayer, entrarSalaMultiplayer, sairSalaMultiplayer } from "../Eventos/MultiplayerCentralizado.js";
-
+import { 
+    criarPartidaMultiplayer, 
+    entrarSalaMultiplayer, 
+    sairSalaMultiplayer,
+    listarSalas,
+    iniciarPartidaMultiplayer,
+    verificarPalavraMultiplayer
+} from "../Eventos/MultiplayerCentralizado.js";
 
 export function rotearEventos(roteamentoDados,jogador){
 
@@ -36,6 +42,29 @@ export function rotearEventos(roteamentoDados,jogador){
 
             sairSalaMultiplayer(parametrosSairSalaMultiplayer);
 
+            break;
+
+        case 'listar_salas':
+            listarSalas(jogador);
+            break;
+        
+        case 'iniciar_partida':
+            const parametrosIniciar = {
+                idSala: roteamentoDados.dados.idSala,
+                jogador: jogador
+            };
+            iniciarPartidaMultiplayer(parametrosIniciar);
+            break;
+        
+        case 'verificar_palavra':
+            const parametrosVerificar = {
+                palavraJogador: roteamentoDados.dados.palavra,
+                idSala: roteamentoDados.dados.idSala,
+                rodada: roteamentoDados.dados.rodada,
+                tempo: roteamentoDados.dados.tempo,
+                jogador: jogador
+            };
+            verificarPalavraMultiplayer(parametrosVerificar);
             break;
     }
 }

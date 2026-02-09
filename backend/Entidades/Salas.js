@@ -2,15 +2,15 @@ import { readFileSync } from 'fs';
 
 export class Sala {
 
-    constructor(
-        {
-            id,
-            nome,
-            status,
-            rodadas,
-            chaveSalaPrivada,
-        } = {}
-    ){
+    constructor({
+        id,
+        nome,
+        status,
+        rodadas,
+        chaveSalaPrivada,
+        privacidade = "publica",
+        maxJogadores = 4,
+    } = {}) {
         this.id = id;
         this.nome = nome;
         this.palavrasEscolhidas = this.gerarPalavrasAleatorias(rodadas);
@@ -18,6 +18,8 @@ export class Sala {
         this.status = status;
         this.rodadas = rodadas;
         this.chaveSalaPrivada = chaveSalaPrivada;
+        this.privacidade = privacidade;
+        this.maxJogadores = maxJogadores;
         this.respostaJogadores = [];
         this.rankingSala = [];
         this.vencedor = [];
@@ -38,20 +40,20 @@ export class Sala {
     }
 
 
-    gerarPalavrasAleatorias(quantidadeRodadas){
+    //Ajustado para consistência de caminho e corrigida lógica do for que retornava undefined
+    gerarPalavrasAleatorias(quantidadeRodadas) {
+        const caminhoArquivo = join(__dirname, '..', 'Dados', 'db.txt');
+        const palavras = readFileSync(caminhoArquivo, 'utf-8');
+        const linhas = palavras.split(/\r?\n/).filter(linha => linha.trim());
 
-        const palavras = readFileSync('../database/db.txt','utf-8');
-        const linhas = palavras.split(/\r?\n/);
-        let tamanhoAleatorio = Math.random() * linhas.length;;
-    
         let palavrasEscolhidas = [];
 
-        for(const i = 0; i <= quantidadeRodadas; i++){
-            palavrasEscolhidas.push(linhas[tamanhoAleatorio-1]);
+        for (let i = 0; i < quantidadeRodadas; i++) {
+            const indiceAleatorio = Math.floor(Math.random() * linhas.length);
+            palavrasEscolhidas.push(linhas[indiceAleatorio]);
         }
 
-        this.palavrasEscolhidas = palavrasEscolhidas;
-
+        return palavrasEscolhidas;
     }
 
 
@@ -90,10 +92,23 @@ export class Sala {
 
     }
 
+    // TODO: Implementar para modo com placar
     calcularVencedor(rodadas){
         const jogadoresPontos = this.vencedor.forEach();
+    }
 
-
+    obterDados() {
+        return {
+            id: this.id,
+            nome: this.nome,
+            status: this.status,
+            rodadas: this.rodadas,
+            privacidade: this.privacidade,
+            maxJogadores: this.maxJogadores,
+            jogadoresAtuais: this.jogadores.length,
+            jogadores: this.jogadores.map(j => ({ id: j.id, nome: j.nome, dono: j.dono })),
+            precisaSenha: this.privacidade === "fechada"
+        };
     }
 
 }
