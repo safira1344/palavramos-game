@@ -118,7 +118,7 @@ export const verificarPalavraMultiplayer = ({
 };
 
 
-export const iniciarPartidaMultiplayer = ({ idSala, jogador }) => {
+export const iniciarPartidaMultiplayer = ({ idSala, jogador, rodada }) => {
     const salaAtiva = salasAtivas.get(idSala);
 
     if (jogador.dono === false) {
@@ -135,7 +135,8 @@ export const iniciarPartidaMultiplayer = ({ idSala, jogador }) => {
             jogador.enviar('rodada_iniciada',{tempoRodada,tempoFim});
         }
 
-        //this.timer 
+        
+         
     }
 
 

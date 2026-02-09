@@ -21,6 +21,7 @@ export class Sala {
         this.respostaJogadores = [];
         this.rankingSala = [];
         this.vencedor = [];
+        this.timer = null;
     }
 
     
