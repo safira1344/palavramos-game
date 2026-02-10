@@ -18,7 +18,8 @@ export function rotearEventos(roteamentoDados,jogador){
                 quantidadeRodadas: roteamentoDados.dados.quantidadeRodadas,
                 jogador: jogador
             };
-
+            
+            console.log('dados que chegaram do index.js:',parametrosEntrarSalaMultiplayer)
             criarPartidaMultiplayer(parametrosPartidaMultiplayer);
 
             break;

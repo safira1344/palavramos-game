@@ -52,6 +52,15 @@ export const errouTentativa = ({indicePalavraOrdemCerta,indicePalavraQuantidadeC
 
 }
 
+export const erroEntrarPartida = ({mensagem}) => {
+
+}
+
+export const novoDono = ({novoDonoId}) => {
+
+}
+
+
 
 
 

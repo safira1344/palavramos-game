@@ -14,7 +14,7 @@ import { Jogador } from './Entidades/Jogadores.js';
         console.log(`${socket.remoteAddress} está ouvindo eventos do servidor na porta ${socket.remotePort}`);
 
         socket.setEncoding('utf-8');
-        socket.write(`conectou o cliente -> ${socket.remoteAddress}`);
+    //    socket.write(`conectou o cliente -> ${socket.remoteAddress}`);
         const idJogador = crypto.randomUUID();
 
         const jogador = new Jogador(
@@ -33,14 +33,8 @@ import { Jogador } from './Entidades/Jogadores.js';
             if(!dadosBrutos) return;
 
             const dadosJson = JSON.parse(dadosBrutos); 
-
-            const roteamentoDados = 
-            {
-                evento: dadosJson.evento,
-                dados: dadosJson.dados
-            };
-
-            rotearEventos(roteamentoDados,jogador);
+            console.log('dados que chegaram do electron:',dadosJson);
+            rotearEventos(dadosJson,jogador);
 
         });
 

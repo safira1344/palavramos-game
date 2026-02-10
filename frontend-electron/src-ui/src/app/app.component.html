@@ -17,19 +17,23 @@
         *ngFor="let room of filteredRooms" 
         (click)="selectRoom(room)"
         [class.selected]="room === selectedRoom">
-        <span class="room-name">{{ room.name }}</span>
+        <span class="room-name">{{ room.nome }}</span>
         <span class="room-id">#{{ room.id }}</span>
-        <span class="room-privacy">{{ room.isPrivate ? 'Privada' : 'Pública' }}</span>
+        <span class="room-privacy">{{ room.privacidade === 'fechada' ? 'Privada' : 'Pública' }}</span>
       </li>
     </ul>
     <div *ngIf="filteredRooms.length === 0" class="no-rooms">
       Nenhuma sala disponível no momento.
     </div>
+    <div *ngIf="filteredRooms.length === 0" class="no-rooms">
+      Ainda não existem salas criadas
+    </div>
+
   </main>
 
   <footer>
     <div class="button-group">
-      <button (click)="showCreateOptions = !showCreateOptions">Criar Partida</button>
+      <button (click)="logClick(); showCreateOptions = !showCreateOptions">Criar Partida</button>
       <div *ngIf="showCreateOptions" class="create-options-form">
         <h3>Nova Partida</h3>
         <input 
