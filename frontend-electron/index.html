@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>Status da Conexão: <span id="status">Tentando...</span></h1>
+    <div id="mensagens" style="border: 1px solid #ccc; height: 150px; overflow-y: scroll;"></div>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const mensagensEl = document.getElementById('mensagens');
+
+        window.palavraMos.onStatus((status) => {
+            statusEl.innerText = status;
+            statusEl.style.color = status === 'Conectado' ? 'green' : 'red';
+        });
+
+        window.palavraMos.onMessage((msg) => {
+            const p = document.createElement('p');
+            p.innerText = `Servidor diz: ${msg}`;
+            mensagensEl.appendChild(p);
+        });
+    </script>
+</body>
+</html>

@@ -63,12 +63,15 @@ export class Sala {
 
         let acumuladorQuantidade = 0;
         let acumuladorOrdem = 0;
+        let indicePalavraOrdemCerta = [];
+        let indicePalavraQuantidadeCerta = [];
 
         //Calcula quantos estão na ordem certa
         for(let indiceTentativa = 0; indiceTentativa < alvo.length; indiceTentativa++){
             if(tentativa[indiceTentativa] === alvo[indiceTentativa]){
                 acumuladorOrdem++;
 
+                indicePalavraOrdemCerta.push(indiceTentativa);
                 tentativa[indiceTentativa] = null;
                 alvo[indiceTentativa] = null;
             }
@@ -81,6 +84,7 @@ export class Sala {
                     if(alvo[indiceAlvo] !== null && tentativa[indiceTentativa] === alvo[indiceAlvo]){
                         acumuladorQuantidade++;
                         
+                        indicePalavraQuantidadeCerta.push(indiceTentativa);
                         alvo[indiceAlvo] = null;
                         break;
                     }
@@ -88,7 +92,10 @@ export class Sala {
             }
         }
 
-        return `Existem ${acumuladorOrdem} letras na ordem correta e ${acumuladorQuantidade} estão certas mas no local errado`;
+        return {
+            indicePalavraOrdemCerta:indicePalavraOrdemCerta,
+            indicePalavraQuantidadeCerta:indicePalavraQuantidadeCerta
+        };
 
     }
 

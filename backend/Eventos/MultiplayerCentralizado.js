@@ -166,7 +166,7 @@ export const verificarPalavraMultiplayer = ({
     } else {
         
        const verificarPalavra = salaAtiva.verificarPalavraOrdemEQuantidadeAcertos(tentativa, alvo);
-       
+
        jogador.enviar('errou_tentativa',verificarPalavra);
     }
 };

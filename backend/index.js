@@ -14,7 +14,7 @@ import { Jogador } from './Entidades/Jogadores.js';
         console.log(`${socket.remoteAddress} está ouvindo eventos do servidor na porta ${socket.remotePort}`);
 
         socket.setEncoding('utf-8');
-        
+        socket.write(`conectou o cliente -> ${socket.remoteAddress}`);
         const idJogador = crypto.randomUUID();
 
         const jogador = new Jogador(

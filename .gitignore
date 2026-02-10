@@ -6,10 +6,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-frontend/node_modules
-frontend/dist
-frontend/dist-ssr
-frontend/*.local
+frontend-electron/node_modules
+frontend-electron/dist
+frontend-electron/dist-ssr
+frontend-electron/*.local
 backend/node_modules
 backend/dist
 backend/dist-ssr

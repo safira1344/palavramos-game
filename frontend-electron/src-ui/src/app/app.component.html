@@ -1,0 +1,56 @@
+<div class="container">
+  <header>
+    <h1>PalavraMos</h1>
+  </header>
+
+  <main>
+    <h2>Salas Disponíveis</h2>
+    <div class="search-container">
+      <input 
+        type="text" 
+        placeholder="Buscar pelo ID da sala..."
+        [(ngModel)]="searchTerm"
+        (input)="filterRooms()">
+    </div>
+    <ul class="room-list">
+      <li 
+        *ngFor="let room of filteredRooms" 
+        (click)="selectRoom(room)"
+        [class.selected]="room === selectedRoom">
+        <span class="room-name">{{ room.name }}</span>
+        <span class="room-id">#{{ room.id }}</span>
+        <span class="room-privacy">{{ room.isPrivate ? 'Privada' : 'Pública' }}</span>
+      </li>
+    </ul>
+    <div *ngIf="filteredRooms.length === 0" class="no-rooms">
+      Nenhuma sala disponível no momento.
+    </div>
+  </main>
+
+  <footer>
+    <div class="button-group">
+      <button (click)="showCreateOptions = !showCreateOptions">Criar Partida</button>
+      <div *ngIf="showCreateOptions" class="create-options-form">
+        <h3>Nova Partida</h3>
+        <input 
+          type="text" 
+          placeholder="Seu nome" 
+          [(ngModel)]="newMatchPlayerName">
+        <div class="privacy-option">
+          <input 
+            type="checkbox" 
+            id="isPrivate" 
+            [(ngModel)]="newMatchIsPrivate">
+          <label for="isPrivate">Partida Privada</label>
+        </div>
+        <div class="button-group">
+          <button (click)="createMatch('Multiplayer')">Criar Multiplayer</button>
+          <button (click)="createMatch('Speedrun')">Criar Speedrun</button>
+        </div>
+      </div>
+    </div>
+    <button *ngIf="selectedRoom" (click)="enterRoom(selectedRoom)">Entrar na Sala</button>
+  </footer>
+</div>
+
+<router-outlet></router-outlet>
