@@ -8,11 +8,9 @@ const { tratarComando } = require('./eventos');
 const clientes = new Map();
 const salas = new Map();
 
-// Inicializar banco de palavras
 const totalPalavras = palavras.inicializar();
-console.log(`${totalPalavras} palavras carregadas do banco de dados`);
+console.log(`${totalPalavras} palavras carregadas`);
 
-// Criar servidor TCP
 const servidor = net.createServer((socket) => {
     const idSocket = `${socket.remoteAddress}:${socket.remotePort}`;
 
@@ -38,7 +36,7 @@ const servidor = net.createServer((socket) => {
                 const mensagem = JSON.parse(linha);
                 tratarComando(clientes, salas, socket, idSocket, mensagem);
             } catch (erro) {
-                console.error('Erro ao parsear mensagem:', erro.message);
+                console.error('Erro ao fazer o parsing da mensagem:', erro.message);
                 comunicacao.enviarParaCliente(socket, 'erro', {
                     mensagem: 'Mensagem inválida'
                 });
