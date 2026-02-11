@@ -1,0 +1,14 @@
+{
+  "name": "palavramos-multiplayer",
+  "version": "1.0.0",
+  "description": "Jogo multiplayer estilo Wordle usando sockets TCP",
+  "main": "server.js",
+  "scripts": {
+    "server": "node server.js",
+    "client": "node client.js"
+  },
+  "keywords": ["wordle", "game", "socket", "multiplayer"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}

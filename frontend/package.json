@@ -1,0 +1,17 @@
+{
+  "name": "palavramos-frontend",
+  "version": "1.0.0",
+  "description": "Interface Electron para Palavramos",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": ["electron", "wordle", "game"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  },
+  "dependencies": {}
+}

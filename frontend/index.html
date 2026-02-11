@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palavramos - Wordle Multiplayer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Tela de Conexão -->
+    <div id="connectionScreen" class="screen active">
+        <div class="container">
+            <div class="header">
+                <h1 class="title">🎮 PALAVRAMOS</h1>
+                <p class="subtitle">Wordle Multiplayer</p>
+            </div>
+            
+            <div class="card">
+                <h2>Conectar ao Servidor</h2>
+                <div class="form-group">
+                    <label for="serverHost">Endereço do Servidor</label>
+                    <input type="text" id="serverHost" value="0.0.0.0" placeholder="localhost">
+                </div>
+                <div class="form-group">
+                    <label for="serverPort">Porta</label>
+                    <input type="number" id="serverPort" value="3000" placeholder="3000">
+                </div>
+                <div class="form-group">
+                    <label for="playerName">Seu Nome</label>
+                    <input type="text" id="playerName" placeholder="Digite seu nome" maxlength="20">
+                </div>
+                <button id="connectBtn" class="btn btn-primary">Conectar</button>
+                <div id="connectionStatus" class="status-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Lobby -->
+    <div id="lobbyScreen" class="screen">
+        <div class="container">
+            <div class="header">
+                <h1 class="title">🎮 PALAVRAMOS</h1>
+                <p class="subtitle">Bem-vindo, <span id="welcomeName"></span>!</p>
+            </div>
+
+            <div class="lobby-content">
+                <div class="lobby-actions">
+                    <button id="createRoomBtn" class="btn btn-primary">
+                        <span class="btn-icon">➕</span> Criar Nova Sala
+                    </button>
+                    <button id="refreshRoomsBtn" class="btn btn-secondary">
+                        <span class="btn-icon">🔄</span> Atualizar
+                    </button>
+                </div>
+
+                <div class="rooms-section">
+                    <h2>Salas Disponíveis</h2>
+                    <div id="roomsList" class="rooms-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Criar Sala -->
+    <div id="createRoomModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Criar Nova Sala</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="maxPlayers">Número Máximo de Jogadores</label>
+                    <input type="number" id="maxPlayers" value="2" min="2" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="timeLimit">Tempo Limite (segundos, 0 = sem limite)</label>
+                    <input type="number" id="timeLimit" value="300" min="0">
+                </div>
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="isPrivate">
+                        <span>Sala Privada</span>
+                    </label>
+                </div>
+                <div class="form-group" id="passwordGroup" style="display: none;">
+                    <label for="roomPassword">Senha da Sala</label>
+                    <input type="password" id="roomPassword" placeholder="Digite a senha">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmCreateRoom" class="btn btn-primary">Criar Sala</button>
+                <button id="cancelCreateRoom" class="btn btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Entrar na Sala -->
+    <div id="joinRoomModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Entrar na Sala</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Sala #<span id="joinRoomId"></span></p>
+                <div class="form-group">
+                    <label for="joinRoomPassword">Senha</label>
+                    <input type="password" id="joinRoomPassword" placeholder="Digite a senha (se necessário)">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmJoinRoom" class="btn btn-primary">Entrar</button>
+                <button id="cancelJoinRoom" class="btn btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela da Sala -->
+    <div id="roomScreen" class="screen">
+        <div class="container">
+            <div class="room-header">
+                <div>
+                    <h1 class="title">Sala #<span id="currentRoomId"></span></h1>
+                    <p class="subtitle">Dono: <span id="roomOwner"></span></p>
+                </div>
+                <button id="leaveRoomBtn" class="btn btn-danger">Sair da Sala</button>
+            </div>
+
+            <div class="room-content">
+                <div class="card">
+                    <h2>Jogadores Esperando (<span id="playerCount">0</span>/<span id="maxPlayerCount">0</span>)</h2>
+                    <div id="playersList" class="players-list"></div>
+                </div>
+
+                <div class="card">
+                    <h2>Configurações da Sala</h2>
+                    <div class="room-info">
+                        <div class="info-item">
+                            <span class="info-label">Tempo Limite:</span>
+                            <span id="roomTimeLimit">300s</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status:</span>
+                            <span id="roomStatus" class="badge badge-waiting">Aguardando</span>
+                        </div>
+                    </div>
+                    <button id="startGameBtn" class="btn btn-primary" style="display: none;">
+                        Iniciar Partida
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Jogo -->
+    <div id="gameScreen" class="screen">
+        <div class="container">
+            <div class="game-header">
+                <div>
+                    <h1 class="title">🎮 PARTIDA EM ANDAMENTO</h1>
+                    <p class="subtitle">Adivinhe a palavra de 5 letras!</p>
+                </div>
+                <div class="game-info">
+                    <div class="info-badge">
+                        <span class="info-label">Tentativas:</span>
+                        <span id="attemptsLeft" class="info-value">5</span>
+                    </div>
+                    <div class="info-badge">
+                        <span class="info-label">Tempo:</span>
+                        <span id="timeRemaining" class="info-value">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-content">
+                <div class="game-board">
+                    <div id="guessesContainer" class="guesses-container"></div>
+                    
+                    <div class="input-section">
+                        <input 
+                            type="text" 
+                            id="guessInput" 
+                            class="guess-input" 
+                            placeholder="Digite uma palavra de 5 letras"
+                            maxlength="5"
+                            autocomplete="off"
+                        >
+                        <button id="submitGuessBtn" class="btn btn-primary">Enviar</button>
+                    </div>
+
+                    <div id="keyboard" class="keyboard">
+                        <div class="keyboard-row">
+                            <button class="key" data-key="Q">Q</button>
+                            <button class="key" data-key="W">W</button>
+                            <button class="key" data-key="E">E</button>
+                            <button class="key" data-key="R">R</button>
+                            <button class="key" data-key="T">T</button>
+                            <button class="key" data-key="Y">Y</button>
+                            <button class="key" data-key="U">U</button>
+                            <button class="key" data-key="I">I</button>
+                            <button class="key" data-key="O">O</button>
+                            <button class="key" data-key="P">P</button>
+                        </div>
+                        <div class="keyboard-row">
+                            <button class="key" data-key="A">A</button>
+                            <button class="key" data-key="S">S</button>
+                            <button class="key" data-key="D">D</button>
+                            <button class="key" data-key="F">F</button>
+                            <button class="key" data-key="G">G</button>
+                            <button class="key" data-key="H">H</button>
+                            <button class="key" data-key="J">J</button>
+                            <button class="key" data-key="K">K</button>
+                            <button class="key" data-key="L">L</button>
+                        </div>
+                        <div class="keyboard-row">
+                            <button class="key key-wide" data-key="ENTER">ENTER</button>
+                            <button class="key" data-key="Z">Z</button>
+                            <button class="key" data-key="X">X</button>
+                            <button class="key" data-key="C">C</button>
+                            <button class="key" data-key="V">V</button>
+                            <button class="key" data-key="B">B</button>
+                            <button class="key" data-key="N">N</button>
+                            <button class="key" data-key="M">M</button>
+                            <button class="key key-wide" data-key="BACKSPACE">⌫</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-sidebar">
+                    <div class="card">
+                        <h3>Jogadores</h3>
+                        <div id="gamePlayers" class="game-players-list"></div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Atividade</h3>
+                        <div id="gameActivity" class="game-activity"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Resultado -->
+    <div id="resultModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>🏁 Partida Finalizada</h2>
+            </div>
+            <div class="modal-body">
+                <div id="resultContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="backToRoomBtn" class="btn btn-primary">Voltar para Sala</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast de Notificação -->
+    <div id="toast" class="toast"></div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
