@@ -2,119 +2,119 @@ const net = require('net');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
+const PORTA = 3000;
 const HOST = '0.0.0.0';
 
 // Estruturas de dados
-const clients = new Map(); // socketId -> client info
-const rooms = new Map(); // roomId -> room info
-let nextRoomId = 1;
+const clientes = new Map(); // idSocket -> informações do cliente
+const salas = new Map(); // idSala -> informações da sala
+let proximoIdSala = 1;
 
 // Carregar palavras do banco de dados
-function loadWords() {
+function carregarPalavras() {
     try {
-        const content = fs.readFileSync(path.join(__dirname, 'bd.txt'), 'utf-8');
-        const words = content.split('\n')
-            .map(w => w.trim().toUpperCase())
-            .filter(w => w.length === 5);
-        return words;
-    } catch (err) {
-        console.error('Erro ao carregar bd.txt:', err.message);
+        const conteudo = fs.readFileSync(path.join(__dirname, 'bd.txt'), 'utf-8');
+        const palavras = conteudo.split('\n')
+            .map(p => p.trim().toUpperCase())
+            .filter(p => p.length === 5);
+        return palavras;
+    } catch (erro) {
+        console.error('Erro ao carregar bd.txt:', erro.message);
         return [];
     }
 }
 
-const WORDS = loadWords();
-console.log(`${WORDS.length} palavras carregadas do banco de dados`);
+const PALAVRAS = carregarPalavras();
+console.log(`${PALAVRAS.length} palavras carregadas do banco de dados`);
 
 // Gerar palavra aleatória
-function getRandomWord() {
-    return WORDS[Math.floor(Math.random() * WORDS.length)];
+function obterPalavraAleatoria() {
+    return PALAVRAS[Math.floor(Math.random() * PALAVRAS.length)];
 }
 
 // Criar sala
-function createRoom(ownerId, ownerName, maxPlayers, timeLimit, isPrivate, password) {
-    const roomId = nextRoomId++;
-    const room = {
-        id: roomId,
-        ownerId,
-        ownerName,
-        maxPlayers,
-        timeLimit, // em segundos
-        isPrivate,
-        password: isPrivate ? password : null,
-        players: [{ id: ownerId, name: ownerName, ready: true }],
-        state: 'waiting', // waiting, playing, finished
-        word: null,
-        startTime: null,
-        gameData: {} // playerId -> { attempts: [], finished: false, won: false }
+function criarSala(idDono, nomeDono, maxJogadores, limiteTempo, ehPrivada, senha) {
+    const idSala = proximoIdSala++;
+    const sala = {
+        id: idSala,
+        idDono,
+        nomeDono,
+        maxJogadores,
+        limiteTempo, // em segundos
+        ehPrivada,
+        senha: ehPrivada ? senha : null,
+        jogadores: [{ id: idDono, nome: nomeDono, pronto: true }],
+        estado: 'aguardando', // aguardando, jogando, finalizado
+        palavra: null,
+        horarioInicio: null,
+        dadosJogo: {} // idJogador -> { tentativas: [], finalizado: false, venceu: false }
     };
-    rooms.set(roomId, room);
-    return room;
+    salas.set(idSala, sala);
+    return sala;
 }
 
 // Enviar mensagem para cliente
-function sendToClient(socket, type, data) {
+function enviarParaCliente(socket, tipo, dados) {
     try {
-        const message = JSON.stringify({ type, data }) + '\n';
-        socket.write(message);
-    } catch (err) {
-        console.error('Erro ao enviar mensagem:', err.message);
+        const mensagem = JSON.stringify({ tipo, dados }) + '\n';
+        socket.write(mensagem);
+    } catch (erro) {
+        console.error('Erro ao enviar mensagem:', erro.message);
     }
 }
 
-// Broadcast para todos na sala
-function broadcastToRoom(roomId, type, data, excludeSocketId = null) {
-    const room = rooms.get(roomId);
-    if (!room) return;
+// Transmitir para todos na sala
+function transmitirParaSala(idSala, tipo, dados, excluirIdSocket = null) {
+    const sala = salas.get(idSala);
+    if (!sala) return;
 
-    room.players.forEach(player => {
-        const client = clients.get(player.id);
-        if (client && client.socket && player.id !== excludeSocketId) {
-            sendToClient(client.socket, type, data);
+    sala.jogadores.forEach(jogador => {
+        const cliente = clientes.get(jogador.id);
+        if (cliente && cliente.socket && jogador.id !== excluirIdSocket) {
+            enviarParaCliente(cliente.socket, tipo, dados);
         }
     });
 }
 
 // Verificar vitória
-function checkWin(guess, word) {
-    return guess.toUpperCase() === word.toUpperCase();
+function verificarVitoria(palpite, palavra) {
+    return palpite.toUpperCase() === palavra.toUpperCase();
 }
 
 // Gerar feedback do Wordle
-function generateFeedback(guess, word) {
-    guess = guess.toUpperCase();
-    word = word.toUpperCase();
-    
+function gerarFeedback(palpite, palavra) {
+    palpite = palpite.toUpperCase();
+    palavra = palavra.toUpperCase();
+
     const feedback = [];
-    const wordLetters = word.split('');
-    const guessLetters = guess.split('');
-    const used = new Array(5).fill(false);
+    const letrasPalavra = palavra.split('');
+    const letrasPalpite = palpite.split('');
+    const usadas = new Array(5).fill(false);
 
     // Primeira passagem: marcar corretos
     for (let i = 0; i < 5; i++) {
-        if (guessLetters[i] === wordLetters[i]) {
-            feedback[i] = 'correct';
-            used[i] = true;
+        if (letrasPalpite[i] === letrasPalavra[i]) {
+            feedback[i] = 'correto';
+            usadas[i] = true;
         }
     }
 
     // Segunda passagem: marcar presentes
     for (let i = 0; i < 5; i++) {
-        if (feedback[i] === 'correct') continue;
-        
-        let found = false;
+        if (feedback[i] === 'correto') continue;
+
+        let encontrado = false;
         for (let j = 0; j < 5; j++) {
-            if (!used[j] && guessLetters[i] === wordLetters[j]) {
-                feedback[i] = 'present';
-                used[j] = true;
-                found = true;
+            if (!usadas[j] && letrasPalpite[i] === letrasPalavra[j]) {
+                feedback[i] = 'presente';
+                usadas[j] = true;
+                encontrado = true;
                 break;
             }
         }
-        
-        if (!found) {
-            feedback[i] = 'absent';
+
+        if (!encontrado) {
+            feedback[i] = 'ausente';
         }
     }
 
@@ -122,383 +122,383 @@ function generateFeedback(guess, word) {
 }
 
 // Iniciar jogo
-function startGame(roomId) {
-    const room = rooms.get(roomId);
-    if (!room || room.state !== 'waiting') return;
+function iniciarJogo(idSala) {
+    const sala = salas.get(idSala);
+    if (!sala || sala.estado !== 'aguardando') return;
 
-    room.state = 'playing';
-    room.word = getRandomWord();
-    room.startTime = Date.now();
-    room.gameData = {};
+    sala.estado = 'jogando';
+    sala.palavra = obterPalavraAleatoria();
+    sala.horarioInicio = Date.now();
+    sala.dadosJogo = {};
 
     // Inicializar dados do jogo para cada jogador
-    room.players.forEach(player => {
-        room.gameData[player.id] = {
-            attempts: [],
-            finished: false,
-            won: false,
-            attemptsLeft: 5
+    sala.jogadores.forEach(jogador => {
+        sala.dadosJogo[jogador.id] = {
+            tentativas: [],
+            finalizado: false,
+            venceu: false,
+            tentativasRestantes: 5
         };
     });
 
-    console.log(`Sala ${roomId} iniciada! Palavra: ${room.word}`);
+    console.log(`Sala ${idSala} iniciada! Palavra: ${sala.palavra}`);
 
     // Notificar todos os jogadores
-    broadcastToRoom(roomId, 'game_started', {
-        roomId,
-        timeLimit: room.timeLimit,
-        players: room.players.map(p => p.name)
+    transmitirParaSala(idSala, 'jogo_iniciado', {
+        idSala,
+        limiteTempo: sala.limiteTempo,
+        jogadores: sala.jogadores.map(j => j.nome)
     });
 
     // Timer da partida
-    if (room.timeLimit > 0) {
+    if (sala.limiteTempo > 0) {
         setTimeout(() => {
-            endGame(roomId, 'timeout');
-        }, room.timeLimit * 1000);
+            finalizarJogo(idSala, 'tempo_esgotado');
+        }, sala.limiteTempo * 1000);
     }
 }
 
 // Finalizar jogo
-function endGame(roomId, reason) {
-    const room = rooms.get(roomId);
-    if (!room || room.state !== 'playing') return;
+function finalizarJogo(idSala, motivo) {
+    const sala = salas.get(idSala);
+    if (!sala || sala.estado !== 'jogando') return;
 
-    room.state = 'finished';
-    
-    const results = room.players.map(player => ({
-        name: player.name,
-        won: room.gameData[player.id]?.won || false,
-        attempts: room.gameData[player.id]?.attempts.length || 0
+    sala.estado = 'finalizado';
+
+    const resultados = sala.jogadores.map(jogador => ({
+        nome: jogador.nome,
+        venceu: sala.dadosJogo[jogador.id]?.venceu || false,
+        tentativas: sala.dadosJogo[jogador.id]?.tentativas.length || 0
     }));
 
-    broadcastToRoom(roomId, 'game_ended', {
-        reason,
-        word: room.word,
-        results
+    transmitirParaSala(idSala, 'jogo_finalizado', {
+        motivo,
+        palavra: sala.palavra,
+        resultados
     });
 
-    console.log(`Sala ${roomId} finalizada. Motivo: ${reason}`);
+    console.log(`Sala ${idSala} finalizada. Motivo: ${motivo}`);
 
     // Resetar sala
     setTimeout(() => {
-        room.state = 'waiting';
-        room.word = null;
-        room.startTime = null;
-        room.gameData = {};
-        
-        broadcastToRoom(roomId, 'room_reset', {});
+        sala.estado = 'aguardando';
+        sala.palavra = null;
+        sala.horarioInicio = null;
+        sala.dadosJogo = {};
+
+        transmitirParaSala(idSala, 'sala_resetada', {});
     }, 5000);
 }
 
-// Handler de comandos
-function handleCommand(socket, socketId, message) {
-    const client = clients.get(socketId);
-    if (!client) return;
+// Manipulador de comandos
+function tratarComando(socket, idSocket, mensagem) {
+    const cliente = clientes.get(idSocket);
+    if (!cliente) return;
 
-    const { type, data } = message;
+    const { tipo, dados } = mensagem;
 
-    switch (type) {
-        case 'set_name':
-            client.name = data.name;
-            sendToClient(socket, 'name_set', { name: data.name });
+    switch (tipo) {
+        case 'definir_nome':
+            cliente.nome = dados.nome;
+            enviarParaCliente(socket, 'nome_definido', { nome: dados.nome });
             break;
 
-        case 'list_rooms':
-            const roomsList = Array.from(rooms.values()).map(room => ({
-                id: room.id,
-                ownerName: room.ownerName,
-                players: room.players.length,
-                maxPlayers: room.maxPlayers,
-                isPrivate: room.isPrivate,
-                state: room.state
+        case 'listar_salas':
+            const listaSalas = Array.from(salas.values()).map(sala => ({
+                id: sala.id,
+                nomeDono: sala.nomeDono,
+                jogadores: sala.jogadores.length,
+                maxJogadores: sala.maxJogadores,
+                ehPrivada: sala.ehPrivada,
+                estado: sala.estado
             }));
-            sendToClient(socket, 'rooms_list', { rooms: roomsList });
+            enviarParaCliente(socket, 'lista_salas', { salas: listaSalas });
             break;
 
-        case 'create_room':
-            if (!client.name) {
-                sendToClient(socket, 'error', { message: 'Defina seu nome primeiro' });
+        case 'criar_sala':
+            if (!cliente.nome) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Defina seu nome primeiro' });
                 break;
             }
-            const room = createRoom(
-                socketId,
-                client.name,
-                data.maxPlayers || 2,
-                data.timeLimit || 300,
-                data.isPrivate || false,
-                data.password || null
+            const sala = criarSala(
+                idSocket,
+                cliente.nome,
+                dados.maxJogadores || 2,
+                dados.limiteTempo || 300,
+                dados.ehPrivada || false,
+                dados.senha || null
             );
-            client.roomId = room.id;
-            sendToClient(socket, 'room_created', {
-                roomId: room.id,
-                room: {
-                    id: room.id,
-                    ownerName: room.ownerName,
-                    players: room.players,
-                    maxPlayers: room.maxPlayers,
-                    state: room.state
+            cliente.idSala = sala.id;
+            enviarParaCliente(socket, 'sala_criada', {
+                idSala: sala.id,
+                sala: {
+                    id: sala.id,
+                    nomeDono: sala.nomeDono,
+                    jogadores: sala.jogadores,
+                    maxJogadores: sala.maxJogadores,
+                    estado: sala.estado
                 }
             });
-            console.log(`Sala ${room.id} criada por ${client.name}`);
+            console.log(`Sala ${sala.id} criada por ${cliente.nome}`);
             break;
 
-        case 'join_room':
-            if (!client.name) {
-                sendToClient(socket, 'error', { message: 'Defina seu nome primeiro' });
-                break;
-            }
-            
-            const roomToJoin = rooms.get(data.roomId);
-            if (!roomToJoin) {
-                sendToClient(socket, 'error', { message: 'Sala não encontrada' });
+        case 'entrar_sala':
+            if (!cliente.nome) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Defina seu nome primeiro' });
                 break;
             }
 
-            if (roomToJoin.state !== 'waiting') {
-                sendToClient(socket, 'error', { message: 'Sala já iniciou o jogo' });
+            const salaParaEntrar = salas.get(dados.idSala);
+            if (!salaParaEntrar) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Sala não encontrada' });
                 break;
             }
 
-            if (roomToJoin.players.length >= roomToJoin.maxPlayers) {
-                sendToClient(socket, 'error', { message: 'Sala está cheia' });
+            if (salaParaEntrar.estado !== 'aguardando') {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Sala já iniciou o jogo' });
                 break;
             }
 
-            if (roomToJoin.isPrivate && roomToJoin.password !== data.password) {
-                sendToClient(socket, 'error', { message: 'Senha incorreta' });
+            if (salaParaEntrar.jogadores.length >= salaParaEntrar.maxJogadores) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Sala está cheia' });
                 break;
             }
 
-            roomToJoin.players.push({ id: socketId, name: client.name, ready: true });
-            client.roomId = roomToJoin.id;
+            if (salaParaEntrar.ehPrivada && salaParaEntrar.senha !== dados.senha) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Senha incorreta' });
+                break;
+            }
 
-            sendToClient(socket, 'room_joined', {
-                roomId: roomToJoin.id,
-                room: {
-                    id: roomToJoin.id,
-                    ownerName: roomToJoin.ownerName,
-                    players: roomToJoin.players,
-                    maxPlayers: roomToJoin.maxPlayers,
-                    state: roomToJoin.state
+            salaParaEntrar.jogadores.push({ id: idSocket, nome: cliente.nome, pronto: true });
+            cliente.idSala = salaParaEntrar.id;
+
+            enviarParaCliente(socket, 'sala_entrou', {
+                idSala: salaParaEntrar.id,
+                sala: {
+                    id: salaParaEntrar.id,
+                    nomeDono: salaParaEntrar.nomeDono,
+                    jogadores: salaParaEntrar.jogadores,
+                    maxJogadores: salaParaEntrar.maxJogadores,
+                    estado: salaParaEntrar.estado
                 }
             });
 
-            broadcastToRoom(roomToJoin.id, 'player_joined', {
-                playerName: client.name,
-                players: roomToJoin.players
-            }, socketId);
+            transmitirParaSala(salaParaEntrar.id, 'jogador_entrou', {
+                nomeJogador: cliente.nome,
+                jogadores: salaParaEntrar.jogadores
+            }, idSocket);
 
-            console.log(`${client.name} entrou na sala ${roomToJoin.id}`);
+            console.log(`${cliente.nome} entrou na sala ${salaParaEntrar.id}`);
             break;
 
-        case 'leave_room':
-            if (!client.roomId) {
-                sendToClient(socket, 'error', { message: 'Você não está em nenhuma sala' });
+        case 'sair_sala':
+            if (!cliente.idSala) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Você não está em nenhuma sala' });
                 break;
             }
 
-            const currentRoom = rooms.get(client.roomId);
-            if (currentRoom) {
-                currentRoom.players = currentRoom.players.filter(p => p.id !== socketId);
-                
-                broadcastToRoom(currentRoom.id, 'player_left', {
-                    playerName: client.name,
-                    players: currentRoom.players
+            const salaAtual = salas.get(cliente.idSala);
+            if (salaAtual) {
+                salaAtual.jogadores = salaAtual.jogadores.filter(j => j.id !== idSocket);
+
+                transmitirParaSala(salaAtual.id, 'jogador_saiu', {
+                    nomeJogador: cliente.nome,
+                    jogadores: salaAtual.jogadores
                 });
 
                 // Se sala ficou vazia ou dono saiu, deletar sala
-                if (currentRoom.players.length === 0 || currentRoom.ownerId === socketId) {
-                    rooms.delete(currentRoom.id);
-                    console.log(`Sala ${currentRoom.id} deletada`);
+                if (salaAtual.jogadores.length === 0 || salaAtual.idDono === idSocket) {
+                    salas.delete(salaAtual.id);
+                    console.log(`Sala ${salaAtual.id} deletada`);
                 }
             }
 
-            client.roomId = null;
-            sendToClient(socket, 'room_left', {});
+            cliente.idSala = null;
+            enviarParaCliente(socket, 'sala_saiu', {});
             break;
 
-        case 'start_game':
-            if (!client.roomId) {
-                sendToClient(socket, 'error', { message: 'Você não está em nenhuma sala' });
+        case 'iniciar_jogo':
+            if (!cliente.idSala) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Você não está em nenhuma sala' });
                 break;
             }
 
-            const roomToStart = rooms.get(client.roomId);
-            if (!roomToStart) {
-                sendToClient(socket, 'error', { message: 'Sala não encontrada' });
+            const salaParaIniciar = salas.get(cliente.idSala);
+            if (!salaParaIniciar) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Sala não encontrada' });
                 break;
             }
 
-            if (roomToStart.ownerId !== socketId) {
-                sendToClient(socket, 'error', { message: 'Apenas o dono pode iniciar' });
+            if (salaParaIniciar.idDono !== idSocket) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Apenas o dono pode iniciar' });
                 break;
             }
 
-            if (roomToStart.players.length < 1) {
-                sendToClient(socket, 'error', { message: 'Sala precisa de pelo menos 1 jogador' });
+            if (salaParaIniciar.jogadores.length < 1) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Sala precisa de pelo menos 1 jogador' });
                 break;
             }
 
-            startGame(roomToStart.id);
+            iniciarJogo(salaParaIniciar.id);
             break;
 
-        case 'guess':
-            if (!client.roomId) {
-                sendToClient(socket, 'error', { message: 'Você não está em nenhuma sala' });
+        case 'palpite':
+            if (!cliente.idSala) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Você não está em nenhuma sala' });
                 break;
             }
 
-            const gameRoom = rooms.get(client.roomId);
-            if (!gameRoom || gameRoom.state !== 'playing') {
-                sendToClient(socket, 'error', { message: 'Jogo não está em andamento' });
+            const salaJogo = salas.get(cliente.idSala);
+            if (!salaJogo || salaJogo.estado !== 'jogando') {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Jogo não está em andamento' });
                 break;
             }
 
-            const playerData = gameRoom.gameData[socketId];
-            if (!playerData) {
-                sendToClient(socket, 'error', { message: 'Dados do jogador não encontrados' });
+            const dadosJogador = salaJogo.dadosJogo[idSocket];
+            if (!dadosJogador) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Dados do jogador não encontrados' });
                 break;
             }
 
-            if (playerData.finished) {
-                sendToClient(socket, 'error', { message: 'Você já terminou suas tentativas' });
+            if (dadosJogador.finalizado) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Você já terminou suas tentativas' });
                 break;
             }
 
-            const guess = data.word.toUpperCase();
-            if (guess.length !== 5) {
-                sendToClient(socket, 'error', { message: 'Palavra deve ter 5 letras' });
+            const palpite = dados.palavra.toUpperCase();
+            if (palpite.length !== 5) {
+                enviarParaCliente(socket, 'erro', { mensagem: 'Palavra deve ter 5 letras' });
                 break;
             }
 
             // Processar tentativa
-            const feedback = generateFeedback(guess, gameRoom.word);
-            const won = checkWin(guess, gameRoom.word);
+            const feedback = gerarFeedback(palpite, salaJogo.palavra);
+            const venceu = verificarVitoria(palpite, salaJogo.palavra);
 
-            playerData.attempts.push({ word: guess, feedback });
-            playerData.attemptsLeft--;
+            dadosJogador.tentativas.push({ palavra: palpite, feedback });
+            dadosJogador.tentativasRestantes--;
 
-            if (won) {
-                playerData.finished = true;
-                playerData.won = true;
-                
-                sendToClient(socket, 'guess_result', {
-                    guess,
+            if (venceu) {
+                dadosJogador.finalizado = true;
+                dadosJogador.venceu = true;
+
+                enviarParaCliente(socket, 'resultado_palpite', {
+                    palpite,
                     feedback,
-                    won: true,
-                    attemptsLeft: playerData.attemptsLeft
+                    venceu: true,
+                    tentativasRestantes: dadosJogador.tentativasRestantes
                 });
 
-                broadcastToRoom(gameRoom.id, 'player_won', {
-                    playerName: client.name,
-                    attempts: playerData.attempts.length
-                }, socketId);
+                transmitirParaSala(salaJogo.id, 'jogador_venceu', {
+                    nomeJogador: cliente.nome,
+                    tentativas: dadosJogador.tentativas.length
+                }, idSocket);
 
                 // Verificar se todos terminaram
-                const allFinished = Object.values(gameRoom.gameData).every(pd => pd.finished);
-                if (allFinished) {
-                    endGame(gameRoom.id, 'all_finished');
+                const todosFinalizados = Object.values(salaJogo.dadosJogo).every(dj => dj.finalizado);
+                if (todosFinalizados) {
+                    finalizarJogo(salaJogo.id, 'todos_finalizaram');
                 }
             } else {
-                if (playerData.attemptsLeft === 0) {
-                    playerData.finished = true;
-                    
-                    sendToClient(socket, 'guess_result', {
-                        guess,
+                if (dadosJogador.tentativasRestantes === 0) {
+                    dadosJogador.finalizado = true;
+
+                    enviarParaCliente(socket, 'resultado_palpite', {
+                        palpite,
                         feedback,
-                        won: false,
-                        attemptsLeft: 0,
-                        eliminated: true
+                        venceu: false,
+                        tentativasRestantes: 0,
+                        eliminado: true
                     });
 
-                    broadcastToRoom(gameRoom.id, 'player_eliminated', {
-                        playerName: client.name
-                    }, socketId);
+                    transmitirParaSala(salaJogo.id, 'jogador_eliminado', {
+                        nomeJogador: cliente.nome
+                    }, idSocket);
 
                     // Verificar se todos terminaram
-                    const allFinished = Object.values(gameRoom.gameData).every(pd => pd.finished);
-                    if (allFinished) {
-                        endGame(gameRoom.id, 'all_finished');
+                    const todosFinalizados = Object.values(salaJogo.dadosJogo).every(dj => dj.finalizado);
+                    if (todosFinalizados) {
+                        finalizarJogo(salaJogo.id, 'todos_finalizaram');
                     }
                 } else {
-                    sendToClient(socket, 'guess_result', {
-                        guess,
+                    enviarParaCliente(socket, 'resultado_palpite', {
+                        palpite,
                         feedback,
-                        won: false,
-                        attemptsLeft: playerData.attemptsLeft
+                        venceu: false,
+                        tentativasRestantes: dadosJogador.tentativasRestantes
                     });
                 }
             }
             break;
 
         default:
-            sendToClient(socket, 'error', { message: 'Comando desconhecido' });
+            enviarParaCliente(socket, 'erro', { mensagem: 'Comando desconhecido' });
     }
 }
 
 // Criar servidor
-const server = net.createServer((socket) => {
-    const socketId = `${socket.remoteAddress}:${socket.remotePort}`;
-    
-    clients.set(socketId, {
+const servidor = net.createServer((socket) => {
+    const idSocket = `${socket.remoteAddress}:${socket.remotePort}`;
+
+    clientes.set(idSocket, {
         socket,
-        name: null,
-        roomId: null
+        nome: null,
+        idSala: null
     });
 
-    console.log(`Cliente conectado: ${socketId}`);
-    sendToClient(socket, 'connected', { message: 'Bem-vindo ao Palavramos!' });
+    console.log(`Cliente conectado: ${idSocket}`);
+    enviarParaCliente(socket, 'conectado', { mensagem: 'Bem-vindo ao Palavramos!' });
 
     let buffer = '';
 
     socket.on('data', (data) => {
         buffer += data.toString();
-        
-        let newlineIndex;
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-            const line = buffer.substring(0, newlineIndex);
-            buffer = buffer.substring(newlineIndex + 1);
-            
+
+        let indiceNovaLinha;
+        while ((indiceNovaLinha = buffer.indexOf('\n')) !== -1) {
+            const linha = buffer.substring(0, indiceNovaLinha);
+            buffer = buffer.substring(indiceNovaLinha + 1);
+
             try {
-                const message = JSON.parse(line);
-                handleCommand(socket, socketId, message);
-            } catch (err) {
-                console.error('Erro ao parsear mensagem:', err.message);
-                sendToClient(socket, 'error', { message: 'Mensagem inválida' });
+                const mensagem = JSON.parse(linha);
+                tratarComando(socket, idSocket, mensagem);
+            } catch (erro) {
+                console.error('Erro ao parsear mensagem:', erro.message);
+                enviarParaCliente(socket, 'erro', { mensagem: 'Mensagem inválida' });
             }
         }
     });
 
     socket.on('end', () => {
-        console.log(`Cliente desconectado: ${socketId}`);
-        
-        const client = clients.get(socketId);
-        if (client && client.roomId) {
-            const room = rooms.get(client.roomId);
-            if (room) {
-                room.players = room.players.filter(p => p.id !== socketId);
-                
-                broadcastToRoom(room.id, 'player_left', {
-                    playerName: client.name,
-                    players: room.players
+        console.log(`Cliente desconectado: ${idSocket}`);
+
+        const cliente = clientes.get(idSocket);
+        if (cliente && cliente.idSala) {
+            const sala = salas.get(cliente.idSala);
+            if (sala) {
+                sala.jogadores = sala.jogadores.filter(j => j.id !== idSocket);
+
+                transmitirParaSala(sala.id, 'jogador_saiu', {
+                    nomeJogador: cliente.nome,
+                    jogadores: sala.jogadores
                 });
 
-                if (room.players.length === 0 || room.ownerId === socketId) {
-                    rooms.delete(room.id);
-                    console.log(`Sala ${room.id} deletada`);
+                if (sala.jogadores.length === 0 || sala.idDono === idSocket) {
+                    salas.delete(sala.id);
+                    console.log(`Sala ${sala.id} deletada`);
                 }
             }
         }
-        
-        clients.delete(socketId);
+
+        clientes.delete(idSocket);
     });
 
-    socket.on('error', (err) => {
-        console.error(`Erro no socket ${socketId}:`, err.message);
+    socket.on('error', (erro) => {
+        console.error(`Erro no socket ${idSocket}:`, erro.message);
     });
 });
 
-server.listen(PORT, HOST, () => {
-    console.log(`🎮 Servidor Palavramos rodando em ${HOST}:${PORT}`);
-    console.log(`📚 ${WORDS.length} palavras disponíveis`);
+servidor.listen(PORTA, HOST, () => {
+    console.log(`🎮 Servidor Palavramos rodando em ${HOST}:${PORTA}`);
+    console.log(`📚 ${PALAVRAS.length} palavras disponíveis`);
 });

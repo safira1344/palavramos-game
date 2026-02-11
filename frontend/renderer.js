@@ -2,72 +2,72 @@ const net = require('net');
 
 // Estado da aplicação
 let socket = null;
-let currentState = 'disconnected';
-let currentRoom = null;
-let playerName = null;
-let isOwner = false;
-let gameStartTime = null;
-let timerInterval = null;
+let estadoAtual = 'desconectado';
+let salaAtual = null;
+let nomeJogador = null;
+let ehDono = false;
+let horarioInicioJogo = null;
+let intervaloTimer = null;
 
 // Elementos DOM
-const screens = {
-    connection: document.getElementById('connectionScreen'),
+const telas = {
+    conexao: document.getElementById('connectionScreen'),
     lobby: document.getElementById('lobbyScreen'),
-    room: document.getElementById('roomScreen'),
-    game: document.getElementById('gameScreen')
+    sala: document.getElementById('roomScreen'),
+    jogo: document.getElementById('gameScreen')
 };
 
 // Funções de utilidade
-function showScreen(screenName) {
-    Object.values(screens).forEach(screen => screen.classList.remove('active'));
-    screens[screenName].classList.add('active');
+function mostrarTela(nomeTela) {
+    Object.values(telas).forEach(tela => tela.classList.remove('active'));
+    telas[nomeTela].classList.add('active');
 }
 
-function showToast(message, type = 'info') {
+function mostrarToast(mensagem, tipo = 'info') {
     const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast toast-${type} show`;
+    toast.textContent = mensagem;
+    toast.className = `toast toast-${tipo} show`;
     setTimeout(() => {
         toast.classList.remove('show');
     }, 3000);
 }
 
-function sendCommand(type, data = {}) {
+function enviarComando(tipo, dados = {}) {
     if (!socket) return;
     try {
-        const message = JSON.stringify({ type, data }) + '\n';
-        socket.write(message);
-    } catch (err) {
-        showToast('Erro ao enviar comando', 'error');
+        const mensagem = JSON.stringify({ tipo, dados }) + '\n';
+        socket.write(mensagem);
+    } catch (erro) {
+        mostrarToast('Erro ao enviar comando', 'error');
     }
 }
 
 // ========== TELA DE CONEXÃO ==========
 document.getElementById('connectBtn').addEventListener('click', () => {
     const host = document.getElementById('serverHost').value.trim();
-    const port = parseInt(document.getElementById('serverPort').value);
-    const name = document.getElementById('playerName').value.trim();
+    const porta = parseInt(document.getElementById('serverPort').value);
+    const nome = document.getElementById('playerName').value.trim();
 
-    if (!name) {
-        showToast('Digite seu nome', 'error');
+    if (!nome) {
+        mostrarToast('Digite seu nome', 'error');
         return;
     }
 
-    if (!host || !port) {
-        showToast('Preencha todos os campos', 'error');
+    if (!host || !porta) {
+        mostrarToast('Preencha todos os campos', 'error');
         return;
     }
 
-    playerName = name;
-    connectToServer(host, port);
+    nomeJogador = nome;
+    conectarAoServidor(host, porta);
 });
 
-function connectToServer(host, port) {
+function conectarAoServidor(host, porta) {
     const statusEl = document.getElementById('connectionStatus');
     statusEl.textContent = 'Conectando...';
     statusEl.className = 'status-message status-info';
 
-    socket = net.createConnection(port, host, () => {
+    socket = net.createConnection(porta, host, () => {
         statusEl.textContent = 'Conectado! Aguarde...';
         statusEl.className = 'status-message status-success';
     });
@@ -76,130 +76,130 @@ function connectToServer(host, port) {
 
     socket.on('data', (data) => {
         buffer += data.toString();
-        
-        let newlineIndex;
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
-            const line = buffer.substring(0, newlineIndex);
-            buffer = buffer.substring(newlineIndex + 1);
-            
+
+        let indiceNovaLinha;
+        while ((indiceNovaLinha = buffer.indexOf('\n')) !== -1) {
+            const linha = buffer.substring(0, indiceNovaLinha);
+            buffer = buffer.substring(indiceNovaLinha + 1);
+
             try {
-                const message = JSON.parse(line);
-                handleServerMessage(message);
-            } catch (err) {
-                console.error('Erro ao parsear mensagem:', err);
+                const mensagem = JSON.parse(linha);
+                tratarMensagemServidor(mensagem);
+            } catch (erro) {
+                console.error('Erro ao parsear mensagem:', erro);
             }
         }
     });
 
     socket.on('end', () => {
-        showToast('Conexão encerrada', 'error');
+        mostrarToast('Conexão encerrada', 'error');
         setTimeout(() => {
-            showScreen('connection');
-            currentState = 'disconnected';
+            mostrarTela('conexao');
+            estadoAtual = 'desconectado';
         }, 2000);
     });
 
-    socket.on('error', (err) => {
-        statusEl.textContent = `Erro: ${err.message}`;
+    socket.on('error', (erro) => {
+        statusEl.textContent = `Erro: ${erro.message}`;
         statusEl.className = 'status-message status-error';
-        showToast('Erro de conexão', 'error');
+        mostrarToast('Erro de conexão', 'error');
     });
 }
 
 // ========== HANDLERS DO SERVIDOR ==========
-function handleServerMessage(message) {
-    const { type, data } = message;
+function tratarMensagemServidor(mensagem) {
+    const { tipo, dados } = mensagem;
 
-    switch (type) {
-        case 'connected':
+    switch (tipo) {
+        case 'conectado':
             // Enviar nome automaticamente
-            sendCommand('set_name', { name: playerName });
+            enviarComando('definir_nome', { nome: nomeJogador });
             break;
 
-        case 'name_set':
-            currentState = 'lobby';
-            document.getElementById('welcomeName').textContent = playerName;
-            showScreen('lobby');
+        case 'nome_definido':
+            estadoAtual = 'lobby';
+            document.getElementById('welcomeName').textContent = nomeJogador;
+            mostrarTela('lobby');
             // Carregar salas automaticamente
-            sendCommand('list_rooms');
-            showToast('Conectado com sucesso!', 'success');
+            enviarComando('listar_salas');
+            mostrarToast('Conectado com sucesso!', 'success');
             break;
 
-        case 'rooms_list':
-            displayRoomsList(data.rooms);
+        case 'lista_salas':
+            exibirListaSalas(dados.salas);
             break;
 
-        case 'room_created':
-            currentRoom = data.room;
-            currentState = 'in_room';
-            isOwner = true;
-            displayRoom(currentRoom);
-            showScreen('room');
-            showToast('Sala criada!', 'success');
+        case 'sala_criada':
+            salaAtual = dados.sala;
+            estadoAtual = 'na_sala';
+            ehDono = true;
+            exibirSala(salaAtual);
+            mostrarTela('sala');
+            mostrarToast('Sala criada!', 'success');
             break;
 
-        case 'room_joined':
-            currentRoom = data.room;
-            currentState = 'in_room';
-            isOwner = false;
-            displayRoom(currentRoom);
-            showScreen('room');
-            showToast('Entrou na sala!', 'success');
+        case 'sala_entrou':
+            salaAtual = dados.sala;
+            estadoAtual = 'na_sala';
+            ehDono = false;
+            exibirSala(salaAtual);
+            mostrarTela('sala');
+            mostrarToast('Entrou na sala!', 'success');
             break;
 
-        case 'player_joined':
-            if (currentRoom) {
-                currentRoom.players = data.players;
-                updatePlayersList(data.players);
-                showToast(`${data.playerName} entrou na sala`, 'info');
+        case 'jogador_entrou':
+            if (salaAtual) {
+                salaAtual.jogadores = dados.jogadores;
+                atualizarListaJogadores(dados.jogadores);
+                mostrarToast(`${dados.nomeJogador} entrou na sala`, 'info');
             }
             break;
 
-        case 'player_left':
-            if (currentRoom) {
-                currentRoom.players = data.players;
-                updatePlayersList(data.players);
-                showToast(`${data.playerName} saiu da sala`, 'info');
+        case 'jogador_saiu':
+            if (salaAtual) {
+                salaAtual.jogadores = dados.jogadores;
+                atualizarListaJogadores(dados.jogadores);
+                mostrarToast(`${dados.nomeJogador} saiu da sala`, 'info');
             }
             break;
 
-        case 'room_left':
-            currentRoom = null;
-            currentState = 'lobby';
-            isOwner = false;
-            showScreen('lobby');
-            sendCommand('list_rooms');
+        case 'sala_saiu':
+            salaAtual = null;
+            estadoAtual = 'lobby';
+            ehDono = false;
+            mostrarTela('lobby');
+            enviarComando('listar_salas');
             break;
 
-        case 'game_started':
-            currentState = 'playing';
-            gameStartTime = Date.now();
-            startGame(data);
+        case 'jogo_iniciado':
+            estadoAtual = 'jogando';
+            horarioInicioJogo = Date.now();
+            iniciarJogo(dados);
             break;
 
-        case 'guess_result':
-            handleGuessResult(data);
+        case 'resultado_palpite':
+            tratarResultadoPalpite(dados);
             break;
 
-        case 'player_won':
-            addGameActivity(`🏆 ${data.playerName} venceu!`, 'success');
+        case 'jogador_venceu':
+            adicionarAtividadeJogo(`🏆 ${dados.nomeJogador} venceu!`, 'success');
             break;
 
-        case 'player_eliminated':
-            addGameActivity(`💀 ${data.playerName} foi eliminado`, 'error');
+        case 'jogador_eliminado':
+            adicionarAtividadeJogo(`💀 ${dados.nomeJogador} foi eliminado`, 'error');
             break;
 
-        case 'game_ended':
-            showGameResult(data);
+        case 'jogo_finalizado':
+            mostrarResultadoJogo(dados);
             break;
 
-        case 'room_reset':
-            showToast('Sala resetada', 'info');
-            currentState = 'in_room';
+        case 'sala_resetada':
+            mostrarToast('Sala resetada', 'info');
+            estadoAtual = 'na_sala';
             break;
 
-        case 'error':
-            showToast(data.message, 'error');
+        case 'erro':
+            mostrarToast(dados.mensagem, 'error');
             break;
     }
 }
@@ -210,8 +210,8 @@ document.getElementById('createRoomBtn').addEventListener('click', () => {
 });
 
 document.getElementById('refreshRoomsBtn').addEventListener('click', () => {
-    sendCommand('list_rooms');
-    showToast('Atualizando...', 'info');
+    enviarComando('listar_salas');
+    mostrarToast('Atualizando...', 'info');
 });
 
 document.getElementById('isPrivate').addEventListener('change', (e) => {
@@ -219,16 +219,16 @@ document.getElementById('isPrivate').addEventListener('change', (e) => {
 });
 
 document.getElementById('confirmCreateRoom').addEventListener('click', () => {
-    const maxPlayers = parseInt(document.getElementById('maxPlayers').value);
-    const timeLimit = parseInt(document.getElementById('timeLimit').value);
-    const isPrivate = document.getElementById('isPrivate').checked;
-    const password = document.getElementById('roomPassword').value;
+    const maxJogadores = parseInt(document.getElementById('maxPlayers').value);
+    const limiteTempo = parseInt(document.getElementById('timeLimit').value);
+    const ehPrivada = document.getElementById('isPrivate').checked;
+    const senha = document.getElementById('roomPassword').value;
 
-    sendCommand('create_room', {
-        maxPlayers: Math.max(2, Math.min(10, maxPlayers)),
-        timeLimit,
-        isPrivate,
-        password: isPrivate ? password : null
+    enviarComando('criar_sala', {
+        maxJogadores: Math.max(2, Math.min(10, maxJogadores)),
+        limiteTempo,
+        ehPrivada,
+        senha: ehPrivada ? senha : null
     });
 
     document.getElementById('createRoomModal').classList.remove('show');
@@ -245,36 +245,36 @@ document.querySelectorAll('.modal-close').forEach(btn => {
     });
 });
 
-function displayRoomsList(rooms) {
+function exibirListaSalas(salas) {
     const container = document.getElementById('roomsList');
-    
-    if (rooms.length === 0) {
+
+    if (salas.length === 0) {
         container.innerHTML = '<div class="empty-state">Nenhuma sala disponível. Crie uma nova!</div>';
         return;
     }
 
-    container.innerHTML = rooms.map(room => {
-        const statusClass = room.state === 'waiting' ? 'success' : 
-                           room.state === 'playing' ? 'warning' : 'secondary';
-        const statusText = room.state === 'waiting' ? 'Aguardando' :
-                          room.state === 'playing' ? 'Jogando' : 'Finalizado';
-        const canJoin = room.state === 'waiting' && room.players < room.maxPlayers;
+    container.innerHTML = salas.map(sala => {
+        const classeStatus = sala.estado === 'aguardando' ? 'success' :
+                           sala.estado === 'jogando' ? 'warning' : 'secondary';
+        const textoStatus = sala.estado === 'aguardando' ? 'Aguardando' :
+                          sala.estado === 'jogando' ? 'Jogando' : 'Finalizado';
+        const podeEntrar = sala.estado === 'aguardando' && sala.jogadores < sala.maxJogadores;
 
         return `
             <div class="room-card">
                 <div class="room-card-header">
-                    <h3>Sala #${room.id}</h3>
-                    <span class="badge badge-${statusClass}">${statusText}</span>
+                    <h3>Sala #${sala.id}</h3>
+                    <span class="badge badge-${classeStatus}">${textoStatus}</span>
                 </div>
                 <div class="room-card-body">
                     <div class="room-card-info">
-                        <span>👤 ${room.ownerName}</span>
-                        <span>👥 ${room.players}/${room.maxPlayers}</span>
-                        <span>${room.isPrivate ? '🔒 Privada' : '🌐 Pública'}</span>
+                        <span>👤 ${sala.nomeDono}</span>
+                        <span>👥 ${sala.jogadores}/${sala.maxJogadores}</span>
+                        <span>${sala.ehPrivada ? '🔒 Privada' : '🌐 Pública'}</span>
                     </div>
                 </div>
                 <div class="room-card-footer">
-                    ${canJoin ? `<button class="btn btn-primary btn-sm" onclick="joinRoom(${room.id}, ${room.isPrivate})">Entrar</button>` : 
+                    ${podeEntrar ? `<button class="btn btn-primary btn-sm" onclick="entrarSala(${sala.id}, ${sala.ehPrivada})">Entrar</button>` :
                                '<button class="btn btn-secondary btn-sm" disabled>Indisponível</button>'}
                 </div>
             </div>
@@ -282,277 +282,277 @@ function displayRoomsList(rooms) {
     }).join('');
 }
 
-window.joinRoom = function(roomId, isPrivate) {
-    if (isPrivate) {
-        document.getElementById('joinRoomId').textContent = roomId;
+window.entrarSala = function(idSala, ehPrivada) {
+    if (ehPrivada) {
+        document.getElementById('joinRoomId').textContent = idSala;
         document.getElementById('joinRoomModal').classList.add('show');
-        
+
         document.getElementById('confirmJoinRoom').onclick = () => {
-            const password = document.getElementById('joinRoomPassword').value;
-            sendCommand('join_room', { roomId, password });
+            const senha = document.getElementById('joinRoomPassword').value;
+            enviarComando('entrar_sala', { idSala, senha });
             document.getElementById('joinRoomModal').classList.remove('show');
             document.getElementById('joinRoomPassword').value = '';
         };
-        
+
         document.getElementById('cancelJoinRoom').onclick = () => {
             document.getElementById('joinRoomModal').classList.remove('show');
             document.getElementById('joinRoomPassword').value = '';
         };
     } else {
-        sendCommand('join_room', { roomId, password: '' });
+        enviarComando('entrar_sala', { idSala, senha: '' });
     }
 };
 
 // ========== SALA ==========
-function displayRoom(room) {
-    document.getElementById('currentRoomId').textContent = room.id;
-    document.getElementById('roomOwner').textContent = room.ownerName;
-    document.getElementById('maxPlayerCount').textContent = room.maxPlayers;
-    document.getElementById('roomTimeLimit').textContent = room.timeLimit > 0 ? `${room.timeLimit}s` : 'Sem limite';
-    
-    updatePlayersList(room.players);
-    
-    const startBtn = document.getElementById('startGameBtn');
-    startBtn.style.display = isOwner ? 'block' : 'none';
+function exibirSala(sala) {
+    document.getElementById('currentRoomId').textContent = sala.id;
+    document.getElementById('roomOwner').textContent = sala.nomeDono;
+    document.getElementById('maxPlayerCount').textContent = sala.maxJogadores;
+    document.getElementById('roomTimeLimit').textContent = sala.limiteTempo > 0 ? `${sala.limiteTempo}s` : 'Sem limite';
+
+    atualizarListaJogadores(sala.jogadores);
+
+    const botaoIniciar = document.getElementById('startGameBtn');
+    botaoIniciar.style.display = ehDono ? 'block' : 'none';
 }
 
-function updatePlayersList(players) {
+function atualizarListaJogadores(jogadores) {
     const container = document.getElementById('playersList');
-    document.getElementById('playerCount').textContent = players.length;
-    
-    container.innerHTML = players.map(player => `
+    document.getElementById('playerCount').textContent = jogadores.length;
+
+    container.innerHTML = jogadores.map(jogador => `
         <div class="player-item">
-            <span class="player-name">${player.name}</span>
-            ${player.id === currentRoom.ownerId ? '<span class="badge badge-warning">Dono</span>' : ''}
+            <span class="player-name">${jogador.nome}</span>
+            ${jogador.id === salaAtual.idDono ? '<span class="badge badge-warning">Dono</span>' : ''}
         </div>
     `).join('');
 }
 
 document.getElementById('leaveRoomBtn').addEventListener('click', () => {
-    sendCommand('leave_room');
+    enviarComando('sair_sala');
 });
 
 document.getElementById('startGameBtn').addEventListener('click', () => {
-    sendCommand('start_game');
+    enviarComando('iniciar_jogo');
 });
 
 // ========== JOGO ==========
-function startGame(data) {
-    showScreen('game');
+function iniciarJogo(dados) {
+    mostrarTela('jogo');
     document.getElementById('attemptsLeft').textContent = '5';
     document.getElementById('guessesContainer').innerHTML = '';
     document.getElementById('gameActivity').innerHTML = '';
     document.getElementById('guessInput').value = '';
     document.getElementById('guessInput').disabled = false;
     document.getElementById('submitGuessBtn').disabled = false;
-    
-    // Reset keyboard
-    document.querySelectorAll('.key').forEach(key => {
-        key.className = 'key';
-        if (key.dataset.key === 'ENTER' || key.dataset.key === 'BACKSPACE') {
-            key.classList.add('key-wide');
+
+    // Resetar teclado
+    document.querySelectorAll('.key').forEach(tecla => {
+        tecla.className = 'key';
+        if (tecla.dataset.key === 'ENTER' || tecla.dataset.key === 'BACKSPACE') {
+            tecla.classList.add('key-wide');
         }
     });
-    
-    // Display players
-    displayGamePlayers(data.players);
-    
-    // Start timer
-    if (data.timeLimit > 0) {
-        startTimer(data.timeLimit);
+
+    // Exibir jogadores
+    exibirJogadoresJogo(dados.jogadores);
+
+    // Iniciar timer
+    if (dados.limiteTempo > 0) {
+        iniciarTimer(dados.limiteTempo);
     } else {
         document.getElementById('timeRemaining').textContent = '∞';
     }
-    
-    addGameActivity('Partida iniciada! Boa sorte! 🍀', 'info');
+
+    adicionarAtividadeJogo('Partida iniciada! Boa sorte! 🍀', 'info');
 }
 
-function displayGamePlayers(players) {
+function exibirJogadoresJogo(jogadores) {
     const container = document.getElementById('gamePlayers');
-    container.innerHTML = players.map(name => `
+    container.innerHTML = jogadores.map(nome => `
         <div class="game-player-item">
             <span class="player-indicator">🟢</span>
-            <span>${name}</span>
+            <span>${nome}</span>
         </div>
     `).join('');
 }
 
-function startTimer(seconds) {
-    if (timerInterval) clearInterval(timerInterval);
-    
-    let remaining = seconds;
+function iniciarTimer(segundos) {
+    if (intervaloTimer) clearInterval(intervaloTimer);
+
+    let restante = segundos;
     const display = document.getElementById('timeRemaining');
-    
-    timerInterval = setInterval(() => {
-        remaining--;
-        const mins = Math.floor(remaining / 60);
-        const secs = remaining % 60;
-        display.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
-        
-        if (remaining <= 0) {
-            clearInterval(timerInterval);
+
+    intervaloTimer = setInterval(() => {
+        restante--;
+        const mins = Math.floor(restante / 60);
+        const segs = restante % 60;
+        display.textContent = `${mins}:${segs.toString().padStart(2, '0')}`;
+
+        if (restante <= 0) {
+            clearInterval(intervaloTimer);
         }
     }, 1000);
 }
 
-function addGameActivity(message, type = 'info') {
+function adicionarAtividadeJogo(mensagem, tipo = 'info') {
     const container = document.getElementById('gameActivity');
     const item = document.createElement('div');
-    item.className = `activity-item activity-${type}`;
-    item.textContent = message;
+    item.className = `activity-item activity-${tipo}`;
+    item.textContent = mensagem;
     container.insertBefore(item, container.firstChild);
-    
+
     // Limitar a 10 itens
     while (container.children.length > 10) {
         container.removeChild(container.lastChild);
     }
 }
 
-// Input de guess
+// Input de palpite
 document.getElementById('guessInput').addEventListener('input', (e) => {
     e.target.value = e.target.value.toUpperCase();
 });
 
 document.getElementById('guessInput').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-        submitGuess();
+        enviarPalpite();
     }
 });
 
-document.getElementById('submitGuessBtn').addEventListener('click', submitGuess);
+document.getElementById('submitGuessBtn').addEventListener('click', enviarPalpite);
 
-function submitGuess() {
+function enviarPalpite() {
     const input = document.getElementById('guessInput');
-    const word = input.value.trim().toUpperCase();
-    
-    if (word.length !== 5) {
-        showToast('A palavra deve ter 5 letras', 'error');
+    const palavra = input.value.trim().toUpperCase();
+
+    if (palavra.length !== 5) {
+        mostrarToast('A palavra deve ter 5 letras', 'error');
         return;
     }
-    
-    if (!/^[A-Z]+$/.test(word)) {
-        showToast('Apenas letras são permitidas', 'error');
+
+    if (!/^[A-Z]+$/.test(palavra)) {
+        mostrarToast('Apenas letras são permitidas', 'error');
         return;
     }
-    
-    sendCommand('guess', { word });
+
+    enviarComando('palpite', { palavra });
     input.value = '';
 }
 
 // Teclado virtual
-document.querySelectorAll('.key').forEach(key => {
-    key.addEventListener('click', () => {
+document.querySelectorAll('.key').forEach(tecla => {
+    tecla.addEventListener('click', () => {
         const input = document.getElementById('guessInput');
-        const letter = key.dataset.key;
-        
-        if (letter === 'ENTER') {
-            submitGuess();
-        } else if (letter === 'BACKSPACE') {
+        const letra = tecla.dataset.key;
+
+        if (letra === 'ENTER') {
+            enviarPalpite();
+        } else if (letra === 'BACKSPACE') {
             input.value = input.value.slice(0, -1);
         } else if (input.value.length < 5) {
-            input.value += letter;
+            input.value += letra;
         }
-        
+
         input.focus();
     });
 });
 
-function handleGuessResult(data) {
+function tratarResultadoPalpite(dados) {
     const container = document.getElementById('guessesContainer');
-    
+
     // Criar linha de tentativa
-    const guessRow = document.createElement('div');
-    guessRow.className = 'guess-row';
-    
+    const linhaPalpite = document.createElement('div');
+    linhaPalpite.className = 'guess-row';
+
     for (let i = 0; i < 5; i++) {
-        const tile = document.createElement('div');
-        tile.className = `tile tile-${data.feedback[i]}`;
-        tile.textContent = data.guess[i];
-        guessRow.appendChild(tile);
-        
+        const quadro = document.createElement('div');
+        quadro.className = `tile tile-${dados.feedback[i]}`;
+        quadro.textContent = dados.palpite[i];
+        linhaPalpite.appendChild(quadro);
+
         // Animar
         setTimeout(() => {
-            tile.classList.add('flip');
+            quadro.classList.add('flip');
         }, i * 100);
     }
-    
-    container.appendChild(guessRow);
-    
+
+    container.appendChild(linhaPalpite);
+
     // Atualizar teclado
     for (let i = 0; i < 5; i++) {
-        const letter = data.guess[i];
-        const feedback = data.feedback[i];
-        const keyEl = document.querySelector(`.key[data-key="${letter}"]`);
-        
-        if (keyEl && !keyEl.classList.contains('key-correct')) {
-            if (feedback === 'correct') {
-                keyEl.classList.add('key-correct');
-            } else if (feedback === 'present' && !keyEl.classList.contains('key-present')) {
-                keyEl.classList.add('key-present');
-            } else if (feedback === 'absent') {
-                keyEl.classList.add('key-absent');
+        const letra = dados.palpite[i];
+        const feedback = dados.feedback[i];
+        const teclaEl = document.querySelector(`.key[data-key="${letra}"]`);
+
+        if (teclaEl && !teclaEl.classList.contains('key-correct')) {
+            if (feedback === 'correto') {
+                teclaEl.classList.add('key-correct');
+            } else if (feedback === 'presente' && !teclaEl.classList.contains('key-present')) {
+                teclaEl.classList.add('key-present');
+            } else if (feedback === 'ausente') {
+                teclaEl.classList.add('key-absent');
             }
         }
     }
-    
+
     // Atualizar tentativas
-    document.getElementById('attemptsLeft').textContent = data.attemptsLeft;
-    
-    if (data.won) {
+    document.getElementById('attemptsLeft').textContent = dados.tentativasRestantes;
+
+    if (dados.venceu) {
         document.getElementById('guessInput').disabled = true;
         document.getElementById('submitGuessBtn').disabled = true;
-        showToast('🎉 Parabéns! Você venceu!', 'success');
-        addGameActivity('Você acertou a palavra!', 'success');
-    } else if (data.eliminated) {
+        mostrarToast('🎉 Parabéns! Você venceu!', 'success');
+        adicionarAtividadeJogo('Você acertou a palavra!', 'success');
+    } else if (dados.eliminado) {
         document.getElementById('guessInput').disabled = true;
         document.getElementById('submitGuessBtn').disabled = true;
-        showToast('❌ Você foi eliminado', 'error');
-        addGameActivity('Suas tentativas acabaram', 'error');
+        mostrarToast('❌ Você foi eliminado', 'error');
+        adicionarAtividadeJogo('Suas tentativas acabaram', 'error');
     } else {
-        addGameActivity(`Tentativa: ${data.guess}`, 'info');
+        adicionarAtividadeJogo(`Tentativa: ${dados.palpite}`, 'info');
     }
 }
 
-function showGameResult(data) {
-    if (timerInterval) clearInterval(timerInterval);
-    
+function mostrarResultadoJogo(dados) {
+    if (intervaloTimer) clearInterval(intervaloTimer);
+
     const modal = document.getElementById('resultModal');
-    const content = document.getElementById('resultContent');
-    
-    const reasonText = data.reason === 'timeout' ? 'Tempo esgotado' : 'Todos terminaram';
-    
-    content.innerHTML = `
+    const conteudo = document.getElementById('resultContent');
+
+    const textoMotivo = dados.motivo === 'tempo_esgotado' ? 'Tempo esgotado' : 'Todos terminaram';
+
+    conteudo.innerHTML = `
         <div class="result-info">
-            <h3>A palavra era: <span class="word-reveal">${data.word}</span></h3>
-            <p class="reason">Motivo: ${reasonText}</p>
+            <h3>A palavra era: <span class="word-reveal">${dados.palavra}</span></h3>
+            <p class="reason">Motivo: ${textoMotivo}</p>
         </div>
-        
+
         <div class="results-table">
             <h3>📊 Resultados</h3>
-            ${data.results.map((result, index) => {
-                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-                const statusClass = result.won ? 'success' : 'error';
-                const statusText = result.won ? 'VENCEU' : 'PERDEU';
-                
+            ${dados.resultados.map((resultado, indice) => {
+                const medalha = indice === 0 ? '🥇' : indice === 1 ? '🥈' : indice === 2 ? '🥉' : '';
+                const classeStatus = resultado.venceu ? 'success' : 'error';
+                const textoStatus = resultado.venceu ? 'VENCEU' : 'PERDEU';
+
                 return `
                     <div class="result-row">
-                        <span class="medal">${medal}</span>
-                        <span class="player-name">${result.name}</span>
-                        <span class="badge badge-${statusClass}">${statusText}</span>
-                        <span class="attempts">${result.attempts} tentativas</span>
+                        <span class="medal">${medalha}</span>
+                        <span class="player-name">${resultado.nome}</span>
+                        <span class="badge badge-${classeStatus}">${textoStatus}</span>
+                        <span class="attempts">${resultado.tentativas} tentativas</span>
                     </div>
                 `;
             }).join('')}
         </div>
     `;
-    
+
     modal.classList.add('show');
 }
 
 document.getElementById('backToRoomBtn').addEventListener('click', () => {
     document.getElementById('resultModal').classList.remove('show');
-    showScreen('room');
-    currentState = 'in_room';
+    mostrarTela('sala');
+    estadoAtual = 'na_sala';
 });
 
 // Fechar modal ao clicar fora

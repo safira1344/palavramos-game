@@ -1,8 +1,8 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
-function createWindow() {
-    const win = new BrowserWindow({
+function criarJanela() {
+    const janela = new BrowserWindow({
         width: 1200,
         height: 800,
         minWidth: 900,
@@ -16,18 +16,18 @@ function createWindow() {
         title: 'Palavramos - Wordle Multiplayer'
     });
 
-    win.loadFile('index.html');
-    
+    janela.loadFile('index.html');
+
     // Abrir DevTools em desenvolvimento
-    // win.webContents.openDevTools();
+    // janela.webContents.openDevTools();
 }
 
 app.whenReady().then(() => {
-    createWindow();
+    criarJanela();
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
-            createWindow();
+            criarJanela();
         }
     });
 });

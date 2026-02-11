@@ -442,17 +442,17 @@ body {
     text-transform: uppercase;
 }
 
-.tile-correct {
+.tile-correto {
     background: var(--tile-correct);
     border-color: var(--tile-correct);
 }
 
-.tile-present {
+.tile-presente {
     background: var(--tile-present);
     border-color: var(--tile-present);
 }
 
-.tile-absent {
+.tile-ausente {
     background: var(--tile-absent);
     border-color: var(--tile-absent);
 }
