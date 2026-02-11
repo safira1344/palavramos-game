@@ -25,8 +25,6 @@ function iniciarJogo(clientes, salas, idSala) {
     const palavra = obterPalavraAleatoria();
     sala.inicializar(palavra);
 
-    console.log(`Sala ${idSala} iniciada! Palavra: ${sala.palavra}`);
-
     transmitirParaSala(clientes, salas)(idSala, 'jogo_iniciado', {
         idSala,
         limiteTempo: sala.limiteTempo,

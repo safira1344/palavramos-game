@@ -9,7 +9,6 @@ const clientes = new Map();
 const salas = new Map();
 
 const totalPalavras = palavras.inicializar();
-console.log(`${totalPalavras} palavras carregadas`);
 
 const servidor = net.createServer((socket) => {
     const idSocket = `${socket.remoteAddress}:${socket.remotePort}`;
@@ -78,6 +77,6 @@ const servidor = net.createServer((socket) => {
 });
 
 servidor.listen(PORTA, HOST, () => {
-    console.log(`Servidor Palavramos rodando em ${HOST}:${PORTA}`);
+    console.log(`Palavramos rodando em ${HOST}:${PORTA}`);
     console.log(`${totalPalavras} palavras disponíveis`);
 });
