@@ -7,7 +7,7 @@
     "start": "electron .",
     "build": "electron-builder"
   },
-  "keywords": ["electron", "wordle", "game"],
+  "keywords": ["electron", "palavramos", "game"],
   "author": "",
   "license": "ISC",
   "devDependencies": {
