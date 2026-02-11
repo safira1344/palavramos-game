@@ -1,0 +1,102 @@
+// ========================================
+// TOAST NOTIFICATIONS - PALAVRAMOS
+// ========================================
+
+@import '../variables';
+@import '../mixins';
+
+.toast-container {
+  position: fixed;
+  top: $spacing-xl;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: $z-index-toast;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  pointer-events: none;
+}
+
+.toast {
+  background-color: $color-surface;
+  color: $color-text;
+  padding: $spacing-md $spacing-lg;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  min-width: 300px;
+  max-width: 500px;
+  pointer-events: all;
+  animation: toastSlideIn 0.3s ease-out;
+  border-left: 4px solid $color-primary;
+
+  @include mobile {
+    min-width: 250px;
+    max-width: 90vw;
+  }
+
+  &.toast-success {
+    border-left-color: $color-correct;
+
+    .toast-icon {
+      color: $color-correct;
+    }
+  }
+
+  &.toast-error {
+    border-left-color: $color-danger;
+
+    .toast-icon {
+      color: $color-danger;
+    }
+  }
+
+  &.toast-warning {
+    border-left-color: $color-warning;
+
+    .toast-icon {
+      color: $color-warning;
+    }
+  }
+
+  &.toast-info {
+    border-left-color: $color-primary;
+
+    .toast-icon {
+      color: $color-primary;
+    }
+  }
+
+  &.toast-exit {
+    animation: toastSlideOut 0.3s ease-in;
+  }
+}
+
+.toast-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  flex: 1;
+  font-size: $font-size-base;
+  line-height: 1.4;
+}
+
+.toast-close {
+  background: none;
+  border: none;
+  color: $color-text-secondary;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color $transition-fast;
+  flex-shrink: 0;
+
+  &:hover {
+    color: $color-text;
+  }
+}

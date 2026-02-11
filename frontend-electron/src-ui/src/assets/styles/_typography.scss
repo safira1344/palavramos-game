@@ -1,0 +1,54 @@
+// ========================================
+// TIPOGRAFIA GLOBAL - PALAVRAMOS
+// ========================================
+
+@import './variables';
+
+body {
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  color: $color-text;
+  background-color: $color-bg;
+}
+
+h1 {
+  font-size: $font-size-h1;
+  font-weight: 700;
+  margin-bottom: $spacing-lg;
+
+  @include tablet {
+    font-size: 1.5rem;
+  }
+}
+
+h2 {
+  font-size: $font-size-h2;
+  font-weight: 600;
+  margin-bottom: $spacing-md;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: $spacing-sm;
+}
+
+p {
+  margin-bottom: $spacing-md;
+  color: $color-text;
+}
+
+small {
+  font-size: $font-size-small;
+  color: $color-text-secondary;
+}
+
+strong {
+  font-weight: 600;
+}
+
+@mixin tablet {
+  @media (max-width: $breakpoint-tablet) {
+    @content;
+  }
+}

@@ -1,0 +1,192 @@
+// ========================================
+// MIXINS REUTILIZÁVEIS - PALAVRAMOS
+// ========================================
+
+@import './variables';
+
+// ==================
+// MEDIA QUERIES
+// ==================
+
+@mixin mobile {
+  @media (max-width: $breakpoint-mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: $breakpoint-tablet) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (max-width: $breakpoint-desktop) {
+    @content;
+  }
+}
+
+// ==================
+// BOTÕES
+// ==================
+
+@mixin btn-base {
+  padding: 12px 24px;
+  border: none;
+  border-radius: $border-radius-md;
+  font-size: $font-size-base;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all $transition-normal;
+  outline: none;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.3);
+  }
+}
+
+@mixin btn-primary {
+  @include btn-base;
+  background-color: $color-primary;
+  color: $color-text;
+
+  &:hover:not(:disabled) {
+    background-color: lighten($color-primary, 5%);
+  }
+}
+
+@mixin btn-secondary {
+  @include btn-base;
+  background-color: $color-secondary;
+  color: $color-text;
+
+  &:hover:not(:disabled) {
+    background-color: lighten($color-secondary, 5%);
+  }
+}
+
+@mixin btn-danger {
+  @include btn-base;
+  background-color: $color-danger;
+  color: $color-text;
+
+  &:hover:not(:disabled) {
+    background-color: lighten($color-danger, 5%);
+  }
+}
+
+// ==================
+// FLEXBOX HELPERS
+// ==================
+
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// ==================
+// CARD
+// ==================
+
+@mixin card {
+  background-color: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-md;
+  padding: $spacing-lg;
+  box-shadow: $shadow-sm;
+}
+
+// ==================
+// INPUT
+// ==================
+
+@mixin input-base {
+  padding: 12px 16px;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-sm;
+  background-color: $color-surface;
+  color: $color-text;
+  font-size: $font-size-base;
+  transition: border-color $transition-fast;
+  outline: none;
+
+  &:focus {
+    border-color: $color-primary;
+  }
+
+  &::placeholder {
+    color: $color-text-secondary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ==================
+// SCROLLBAR CUSTOMIZADO
+// ==================
+
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: $color-bg;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $color-border;
+    border-radius: $border-radius-sm;
+
+    &:hover {
+      background-color: lighten($color-border, 10%);
+    }
+  }
+}
+
+// ==================
+// TEXT TRUNCATE
+// ==================
+
+@mixin text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin text-truncate-lines($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -1,0 +1,306 @@
+// ========================================
+// ANIMAÇÕES - PALAVRAMOS
+// ========================================
+// Migrado do projeto React
+// ========================================
+
+@import './variables';
+
+// ==================
+// POP ANIMATION (Input de tiles)
+// ==================
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pop {
+  animation: pop 0.15s ease-in-out;
+}
+
+// ==================
+// SHAKE ANIMATION (Palavra inválida)
+// ==================
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+// ==================
+// FLIP ANIMATION (Revelar letra)
+// ==================
+@keyframes flipIn {
+  0% {
+    transform: rotateX(0);
+  }
+  50% {
+    transform: rotateX(-90deg);
+  }
+  100% {
+    transform: rotateX(0);
+  }
+}
+
+.flip {
+  animation: flipIn 0.5s ease-in-out;
+}
+
+// Delays para efeito sequencial
+.flip-delay-1 { animation-delay: 0s; }
+.flip-delay-2 { animation-delay: 0.1s; }
+.flip-delay-3 { animation-delay: 0.2s; }
+.flip-delay-4 { animation-delay: 0.3s; }
+.flip-delay-5 { animation-delay: 0.4s; }
+
+// ==================
+// BOUNCE ANIMATION (Vitória)
+// ==================
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+}
+
+.bounce {
+  animation: bounce 0.8s ease-in-out;
+}
+
+// Delays para efeito sequencial
+.bounce-delay-1 { animation-delay: 0s; }
+.bounce-delay-2 { animation-delay: 0.1s; }
+.bounce-delay-3 { animation-delay: 0.2s; }
+.bounce-delay-4 { animation-delay: 0.3s; }
+.bounce-delay-5 { animation-delay: 0.4s; }
+
+// ==================
+// FADE IN
+// ==================
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+// ==================
+// SLIDE UP
+// ==================
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+// ==================
+// PULSE (Timer warning)
+// ==================
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.pulse {
+  animation: pulse 1s infinite;
+}
+
+// ==================
+// KEY PRESS (Teclado)
+// ==================
+@keyframes keyPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.key-press {
+  animation: keyPress 0.1s ease-in-out;
+}
+
+// ==================
+// GLOW (Vencedor)
+// ==================
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px $color-primary;
+  }
+  50% {
+    box-shadow: 0 0 20px $color-primary, 0 0 30px $color-primary;
+  }
+}
+
+.glow {
+  animation: glow 2s infinite;
+}
+
+// ==================
+// TOAST SLIDE IN/OUT
+// ==================
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+.toast-slide-in {
+  animation: toastSlideIn 0.3s ease-out;
+}
+
+.toast-slide-out {
+  animation: toastSlideOut 0.3s ease-in;
+}
+
+// ==================
+// CONFETTI FALL (Celebração)
+// ==================
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  animation: confettiFall 3s linear;
+  pointer-events: none;
+}
+
+// ==================
+// SLIDE POSITION (Ranking)
+// ==================
+@keyframes slidePosition {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide-position {
+  animation: slidePosition 0.5s ease-out;
+}
+
+// ==================
+// MODAL APPEAR
+// ==================
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-appear {
+  animation: modalAppear 0.3s ease-out;
+}
+
+// ==================
+// LOADING DOTS
+// ==================
+@keyframes loadingDots {
+  0%, 20% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.3;
+  }
+}
+
+.loading-dot {
+  animation: loadingDots 1.4s infinite;
+
+  &:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  &:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+}

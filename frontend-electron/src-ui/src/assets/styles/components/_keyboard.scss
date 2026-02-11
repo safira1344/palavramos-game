@@ -1,0 +1,91 @@
+// ========================================
+// KEYBOARD - PALAVRAMOS
+// ========================================
+
+@import '../variables';
+@import '../mixins';
+
+.keyboard {
+  margin: $spacing-xl auto;
+  max-width: 500px;
+  padding: 0 $spacing-sm;
+}
+
+.keyboard-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+
+  @include mobile {
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+}
+
+.key {
+  background-color: $color-secondary;
+  color: $color-text;
+  border: none;
+  border-radius: $border-radius-sm;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+  min-width: 43px;
+  height: 58px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all $transition-fast;
+  user-select: none;
+
+  @include mobile {
+    min-width: 32px;
+    height: 50px;
+    font-size: 0.75rem;
+  }
+
+  &:hover {
+    filter: brightness(1.2);
+  }
+
+  &:active,
+  &.pressed {
+    transform: scale(0.95);
+    animation: keyPress 0.1s ease-in-out;
+  }
+
+  &.key-enter,
+  &.key-back {
+    min-width: 65px;
+    font-size: 0.75rem;
+
+    @include mobile {
+      min-width: 50px;
+      font-size: 0.65rem;
+    }
+  }
+
+  &.correct {
+    background-color: $color-correct;
+    border-color: $color-correct;
+  }
+
+  &.present {
+    background-color: $color-present;
+    border-color: $color-present;
+  }
+
+  &.absent {
+    background-color: $color-absent;
+    border-color: $color-absent;
+    opacity: 0.5;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+}

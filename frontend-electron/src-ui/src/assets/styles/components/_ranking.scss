@@ -1,0 +1,112 @@
+// ========================================
+// RANKING - PALAVRAMOS
+// ========================================
+
+@import '../variables';
+@import '../mixins';
+
+.ranking-sidebar {
+  background-color: $color-surface;
+  border-left: 1px solid $color-border;
+  padding: $spacing-lg;
+  min-width: 200px;
+  max-width: 250px;
+  overflow-y: auto;
+
+  @include custom-scrollbar;
+
+  @include desktop {
+    border-left: none;
+    border-top: 1px solid $color-border;
+    max-width: 100%;
+  }
+}
+
+.ranking-title {
+  font-size: $font-size-h2;
+  font-weight: 600;
+  margin-bottom: $spacing-lg;
+  text-align: center;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+  background-color: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-md;
+  animation: slidePosition 0.5s ease-out;
+
+  &.first {
+    border-color: #FFD700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), transparent);
+
+    .ranking-position {
+      background-color: #FFD700;
+      color: #000;
+    }
+  }
+
+  &.second {
+    border-color: #C0C0C0;
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.1), transparent);
+
+    .ranking-position {
+      background-color: #C0C0C0;
+      color: #000;
+    }
+  }
+
+  &.third {
+    border-color: #CD7F32;
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.1), transparent);
+
+    .ranking-position {
+      background-color: #CD7F32;
+      color: #fff;
+    }
+  }
+}
+
+.ranking-position {
+  background-color: $color-primary;
+  color: $color-text;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.ranking-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ranking-name {
+  font-weight: 600;
+  font-size: $font-size-base;
+  @include text-truncate;
+  margin-bottom: 2px;
+}
+
+.ranking-score {
+  font-size: $font-size-small;
+  color: $color-text-secondary;
+}
+
+// Ranking no modal de resultado
+.result-ranking {
+  margin-top: $spacing-xl;
+
+  .ranking-item {
+    margin-bottom: $spacing-md;
+  }
+}

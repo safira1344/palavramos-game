@@ -1,0 +1,93 @@
+// ========================================
+// PLAYERS LIST E SIDEBAR - PALAVRAMOS
+// ========================================
+
+@import '../variables';
+@import '../mixins';
+
+.players-sidebar {
+  background-color: $color-surface;
+  border-right: 1px solid $color-border;
+  padding: $spacing-lg;
+  min-width: 200px;
+  max-width: 250px;
+  overflow-y: auto;
+
+  @include custom-scrollbar;
+
+  @include desktop {
+    border-right: none;
+    border-bottom: 1px solid $color-border;
+    max-width: 100%;
+    display: flex;
+    gap: $spacing-md;
+    overflow-x: auto;
+  }
+}
+
+.player-item {
+  background-color: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $border-radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  transition: all $transition-fast;
+
+  @include desktop {
+    min-width: 180px;
+    margin-bottom: 0;
+  }
+
+  &.solved {
+    border-color: $color-correct;
+    background-color: rgba($color-correct, 0.1);
+  }
+
+  &.failed {
+    border-color: $color-danger;
+    background-color: rgba($color-danger, 0.1);
+  }
+
+  &.active {
+    border-color: $color-primary;
+    box-shadow: 0 0 10px rgba($color-primary, 0.3);
+  }
+}
+
+.player-name {
+  font-weight: 600;
+  font-size: $font-size-base;
+  margin-bottom: $spacing-xs;
+  @include text-truncate;
+}
+
+.player-status {
+  font-size: $font-size-small;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+
+  &.solved {
+    color: $color-correct;
+  }
+
+  &.failed {
+    color: $color-danger;
+  }
+}
+
+.player-attempts {
+  font-size: $font-size-small;
+  color: $color-text-secondary;
+}
+
+// Lista de jogadores no lobby
+.players-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
