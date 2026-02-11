@@ -1,5 +1,6 @@
 import { salasAtivas } from "../Estados/EstadoGlobal.js";
 import { Sala } from "../Entidades/Salas.js";
+const { setTimeout } = require('timers/promises');
 import * as crypto from "crypto";
 
 /*
@@ -9,7 +10,47 @@ import * as crypto from "crypto";
     ELE GERA UM ID UNICO DA PARTIDA E PROCURA POR UMA PARTIDA MULTIPLAYER
     FAZ UMA LISTA DE 5 PALAVRAS
     */
-export const criarPartidaMultiplayer = ({
+export const criarPartidaMultiplayerSemRodadas = ({
+    nomeUsuario,
+    privacidade,
+    maxJogadores,
+    jogador,
+    tempo
+}) => {
+    const nomeDaSala = `Sala de ${nomeUsuario}`;
+    const idSala = crypto.randomUUID();
+
+    const dadosSala = new Sala({
+        id: idSala,
+        nome: nomeDaSala,
+        jogadores: [jogador],
+        status: "aguardando_jogadores",
+        tempo:tempo,
+        privacidade: privacidade, // Adicionei para quando a sala for retornada, saber a privacidade
+        maxJogadores: maxJogadores // Modifiquei para ter um limite de jogadores
+    });
+
+    if (privacidade === "fechada") {
+        dadosSala.gerarChaveSalaPrivada();
+    }
+
+    jogador.dono = true;
+    jogador.status = "no_lobby";
+    jogador.idSala = idSala;
+
+    salasAtivas.set(idSala, dadosSala);
+    jogador.enviar("receber_dados_multiplayer", {
+        sala: dadosSala.obterDados(),
+        mensagem: "Sala criada com sucesso"
+    });
+    
+    // Notificar sobre nova sala pública
+    if (privacidade === "publica") {
+        notificarNovasSalas();
+    }
+};
+
+/*export const criarPartidaMultiplayer = ({
     nomeUsuario,
     privacidade,
     quantidadeRodadas,
@@ -48,6 +89,8 @@ export const criarPartidaMultiplayer = ({
         notificarNovasSalas();
     }
 };
+*/
+
 
 export const listarSalas = (jogador) => {
     const salasDisponiveis = [];
@@ -58,8 +101,11 @@ export const listarSalas = (jogador) => {
         }
     }
     
-    jogador.enviar("lista_salas", { salas: salasDisponiveis });
+    jogador.enviar("listar_salas", { salas: salasDisponiveis });
 };
+
+
+
 
 
 export const entrarSalaMultiplayer = ({ idSala, chave, jogador }) => {
@@ -138,12 +184,11 @@ export const sairSalaMultiplayer = ({ idSala, jogador }) => {
     }
 };
 
-
-export const verificarPalavraMultiplayer = ({
+//Jogador criar sala , escolher o maximo de tempo que a partida irá. 
+/*export const verificarPalavraMultiplayer = ({
     palavraJogador,
     idSala,
-    rodada,
-    tempo,
+    rodada
 }) => {
     const salaAtiva = salasAtivas.get(idSala);
 
@@ -154,19 +199,52 @@ export const verificarPalavraMultiplayer = ({
 
     //Retirei primeiro if por conta da redundância
     if (tentativa === alvo) {
-        const vencedor = {
-            jogador: jogador,
-            rodada: rodada,
-            tempo: tempo,
-        };
 
-        salaAtiva.vencedor.push(vencedor);
+        //Verificar se foi o primeiro a acertar
+        if(salaAtiva.vencedor.length <= 0){
+            const vencedor = {
+                jogador: jogador,
+                rodada: rodada,
+            };
+            salaAtiva.vencedor.push(vencedor);
 
-        notificarJogadoresSala(salaAtiva, 'venceu_rodada', vencedor);
+            const resposta = {
+                jogador:
+            };
+            salaAtiva.respostaJogadores.push();
+            notificarJogadoresSala(salaAtiva, 'venceu_rodada', vencedor);
+        }else{
+            salaAtiva
+            notificarJogadoresSala(salaAtiva,'acertou', jogador);
+        }
+
     } else {
         
        const verificarPalavra = salaAtiva.verificarPalavraOrdemEQuantidadeAcertos(tentativa, alvo);
 
+       jogador.enviar('errou_tentativa',verificarPalavra);
+    }
+};
+*/
+
+
+//Jogador criar sala , escolher o maximo de tempo que a partida irá. 
+export const verificarPalavraMultiplayerSemRodadas = ({
+    palavraJogador,
+    idSala
+}) => {
+    const salaAtiva = salasAtivas.get(idSala);
+
+    if (!salaAtiva) return;
+
+    const tentativa = palavraJogador.toUpperCase();
+    const alvo = salaAtiva.palavrasEscolhidas[0].toUpperCase();
+
+    if (tentativa === alvo) {
+            salaAtiva.status = 'finalizada';
+            notificarJogadoresSala(salaAtiva, 'venceu_rodada', {jogador,salaAtiva});
+    } else {
+       const verificarPalavra = salaAtiva.verificarPalavraOrdemEQuantidadeAcertos(tentativa, alvo);
        jogador.enviar('errou_tentativa',verificarPalavra);
     }
 };
@@ -193,7 +271,32 @@ export const iniciarPartidaMultiplayer = ({ idSala, jogador, rodada }) => {
     iniciarContagem(salaAtiva);
 };
 
-function iniciarContagem(sala) {
+export const iniciarPartidaMultiplayerSemRodadas = (idSala, jogador) => {
+    const salaAtiva = salasAtivas.get(idSala);
+
+    if (!salaAtiva) {
+        jogador.enviar("erro_iniciar_partida", "Sala não encontrada");
+        return;
+    }
+
+    if (!jogador.dono) {
+        jogador.enviar("erro_iniciar_partida", "Apenas o dono pode iniciar a partida");
+        return;
+    }
+
+    if (salaAtiva.jogadores.length < 2) {
+        jogador.enviar("erro_iniciar_partida", "Aguarde mais jogadores");
+        return;
+    }
+
+    iniciarContagem(salaAtiva,salaAtiva.tempo);
+};
+
+async function iniciarContagem(sala,tempo) {
+    if(sala.status === 'finalizada'){
+        return;
+    }
+
     sala.status = "iniciando";
     
     notificarJogadoresSala(sala, "countdown_iniciado", { 
@@ -202,13 +305,13 @@ function iniciarContagem(sala) {
     });
 
     setTimeout(() => {
-        iniciarPartida(sala);
+        iniciarPartida(sala,tempo);
     }, 2000);
 }
 
-function iniciarPartida(sala) {
+function iniciarPartida(sala,tempo) {
     sala.status = "em_progresso";
-    const tempoRodada = 60000;
+    const tempoRodada = tempo * 1000;
     const tempoInicio = Date.now();
     const tempoFim = tempoInicio + tempoRodada;
 
@@ -233,4 +336,8 @@ async function notificarNovasSalas() {
             listarSalas(jogador);
         }
     }
+}
+
+function sleep(tempo){
+    setTimeout(tempo);
 }

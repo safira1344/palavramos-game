@@ -99,9 +99,13 @@ export class Sala {
 
     }
 
-    // TODO: Implementar para modo com placar
-    calcularVencedor(rodadas){
-        const jogadoresPontos = this.vencedor.forEach();
+    calcularVencedor(){
+        
+
+        return {
+            nome:nome,
+            pontuacao:pontuacao
+        }
     }
 
     obterDados() {

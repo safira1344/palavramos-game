@@ -4,7 +4,9 @@ import {
     sairSalaMultiplayer,
     listarSalas,
     iniciarPartidaMultiplayer,
-    verificarPalavraMultiplayer
+    verificarPalavraMultiplayer,
+    criarPartidaMultiplayerSemRodadas,
+    verificarPalavraMultiplayerSemRodadas
 } from "../Eventos/MultiplayerCentralizado.js";
 
 export function rotearEventos(roteamentoDados,jogador){
@@ -15,12 +17,12 @@ export function rotearEventos(roteamentoDados,jogador){
             const parametrosPartidaMultiplayer = {
                 nomeUsuario: roteamentoDados.dados.nomeUsuario,
                 privacidade: roteamentoDados.dados.privacidade,
-                quantidadeRodadas: roteamentoDados.dados.quantidadeRodadas,
-                jogador: jogador
+                jogador: jogador,
+                tempo: roteamentoDados.dados.tempo
             };
             
             console.log('dados que chegaram do index.js:',parametrosEntrarSalaMultiplayer)
-            criarPartidaMultiplayer(parametrosPartidaMultiplayer);
+            criarPartidaMultiplayerSemRodadas(parametrosPartidaMultiplayer);
 
             break;
         
@@ -61,11 +63,10 @@ export function rotearEventos(roteamentoDados,jogador){
             const parametrosVerificar = {
                 palavraJogador: roteamentoDados.dados.palavra,
                 idSala: roteamentoDados.dados.idSala,
-                rodada: roteamentoDados.dados.rodada,
                 tempo: roteamentoDados.dados.tempo,
                 jogador: jogador
             };
-            verificarPalavraMultiplayer(parametrosVerificar);
+            verificarPalavraMultiplayerSemRodadas(parametrosVerificar);
             break;
     }
 }
