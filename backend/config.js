@@ -1,4 +1,4 @@
 module.exports = {
-    PORTA: 3000,
+    PORTA: 30000,
     HOST: '0.0.0.0'
 };
