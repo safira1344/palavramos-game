@@ -1,0 +1,108 @@
+@import '../assets/styles/variables';
+@import '../assets/styles/mixins';
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: $color-bg;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: $spacing-xl;
+
+  @include tablet {
+    padding: $spacing-lg;
+  }
+}
+
+.header {
+  margin-bottom: $spacing-2xl;
+  text-align: center;
+  border-bottom: none;
+  padding: 0;
+}
+
+.screen-content {
+  flex: 1;
+  margin-bottom: $spacing-2xl;
+
+  h2 {
+    margin-bottom: $spacing-lg;
+  }
+}
+
+.room-list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+
+  .card.selected {
+    border-color: $color-primary;
+    box-shadow: 0 0 0 2px rgba($color-primary, 0.3);
+    background-color: rgba($color-primary, 0.05);
+  }
+}
+
+.room-name {
+  font-weight: 600;
+  font-size: $font-size-base;
+  color: $color-text;
+}
+
+.room-privacy {
+  display: block;
+  margin-top: $spacing-xs;
+  color: $color-text-secondary;
+}
+
+.footer-actions {
+  margin-top: auto;
+}
+
+.button-group {
+  position: relative;
+  width: 100%;
+}
+
+.mode-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+  margin-top: $spacing-lg;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-button {
+    cursor: pointer;
+    padding: $spacing-lg;
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: $color-primary;
+    }
+  }
+
+  .mode-icon {
+    font-size: 2rem;
+    margin-bottom: $spacing-sm;
+  }
+
+  .mode-name {
+    font-size: $font-size-base;
+    font-weight: 600;
+    margin-bottom: $spacing-xs;
+  }
+
+  .mode-description {
+    font-size: $font-size-small;
+    color: $color-text-secondary;
+  }
+}

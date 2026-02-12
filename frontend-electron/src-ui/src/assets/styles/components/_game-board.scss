@@ -1,0 +1,157 @@
+// ========================================
+// GAME BOARD - PALAVRAMOS
+// ========================================
+
+@import '../variables';
+@import '../mixins';
+
+.game-board {
+  display: grid;
+  grid-template-rows: repeat(6, $tile-size);
+  gap: $tile-gap;
+  margin: $spacing-xl auto;
+  max-width: max-content;
+
+  @include tablet {
+    --tile-size-responsive: 52px;
+    grid-template-rows: repeat(6, var(--tile-size-responsive));
+  }
+
+  @include mobile {
+    --tile-size-responsive: 48px;
+    grid-template-rows: repeat(6, var(--tile-size-responsive));
+  }
+}
+
+.game-row {
+  display: grid;
+  grid-template-columns: repeat(5, $tile-size);
+  gap: $tile-gap;
+
+  @include tablet {
+    grid-template-columns: repeat(5, var(--tile-size-responsive, 52px));
+  }
+
+  @include mobile {
+    grid-template-columns: repeat(5, var(--tile-size-responsive, 48px));
+  }
+}
+
+.tile {
+  width: $tile-size;
+  height: $tile-size;
+  border: 2px solid $color-border;
+  background-color: $color-empty;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: $color-text;
+  text-transform: uppercase;
+  border-radius: $border-radius-sm;
+  transition: all $transition-fast;
+
+  @include tablet {
+    width: var(--tile-size-responsive, 52px);
+    height: var(--tile-size-responsive, 52px);
+    font-size: 1.75rem;
+  }
+
+  @include mobile {
+    width: var(--tile-size-responsive, 48px);
+    height: var(--tile-size-responsive, 48px);
+    font-size: 1.5rem;
+  }
+
+  &.filled {
+    border-color: $color-text-secondary;
+    animation: pop 0.15s ease-in-out;
+  }
+
+  &.correct {
+    background-color: $color-correct;
+    border-color: $color-correct;
+  }
+
+  &.present {
+    background-color: $color-present;
+    border-color: $color-present;
+  }
+
+  &.absent {
+    background-color: $color-absent;
+    border-color: $color-absent;
+  }
+
+  &.shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  &.flip {
+    animation: flipIn 0.5s ease-in-out;
+  }
+
+  &.bounce {
+    animation: bounce 0.8s ease-in-out;
+  }
+}
+
+// Mini board (para visualizar outros jogadores)
+.mini-board {
+  display: grid;
+  grid-template-rows: repeat(6, 12px);
+  gap: 2px;
+  margin-top: $spacing-sm;
+
+  .mini-row {
+    display: grid;
+    grid-template-columns: repeat(5, 12px);
+    gap: 2px;
+  }
+
+  .mini-tile {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    background-color: $color-empty;
+    border: 1px solid $color-border;
+
+    &.correct {
+      background-color: $color-correct;
+      border-color: $color-correct;
+    }
+
+    &.present {
+      background-color: $color-present;
+      border-color: $color-present;
+    }
+
+    &.absent {
+      background-color: $color-absent;
+      border-color: $color-absent;
+    }
+  }
+}
+
+// Feedback message
+.feedback-message {
+  text-align: center;
+  margin-top: $spacing-md;
+  min-height: 24px;
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+  font-weight: 500;
+
+  &.error {
+    color: $color-danger;
+  }
+
+  &.success {
+    color: $color-correct;
+  }
+
+  &.warning {
+    color: $color-warning;
+  }
+}

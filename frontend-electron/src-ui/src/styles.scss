@@ -1,0 +1,62 @@
+// 1. Variáveis e configurações
+@import './assets/styles/variables';
+@import './assets/styles/mixins';
+
+// 2. Reset e base
+@import './assets/styles/reset';
+@import './assets/styles/typography';
+
+// 3. Animações
+@import './assets/styles/animations';
+
+// 4. Componentes base
+@import './assets/styles/components/buttons';
+@import './assets/styles/components/cards';
+@import './assets/styles/components/inputs';
+@import './assets/styles/components/modals';
+
+// 5. Componentes de jogo
+@import './assets/styles/components/game-board';
+@import './assets/styles/components/keyboard';
+@import './assets/styles/components/toast';
+@import './assets/styles/components/timer';
+@import './assets/styles/components/players';
+@import './assets/styles/components/ranking';
+@import './assets/styles/components/layout';
+
+// 6. Utilitários globais
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mt-xs { margin-top: $spacing-xs; }
+.mt-sm { margin-top: $spacing-sm; }
+.mt-md { margin-top: $spacing-md; }
+.mt-lg { margin-top: $spacing-lg; }
+.mt-xl { margin-top: $spacing-xl; }
+
+.mb-xs { margin-bottom: $spacing-xs; }
+.mb-sm { margin-bottom: $spacing-sm; }
+.mb-md { margin-bottom: $spacing-md; }
+.mb-lg { margin-bottom: $spacing-lg; }
+.mb-xl { margin-bottom: $spacing-xl; }
+
+.flex-center {
+  @include flex-center;
+}
+
+.flex-between {
+  @include flex-between;
+}
+
+.flex-column {
+  @include flex-column;
+}

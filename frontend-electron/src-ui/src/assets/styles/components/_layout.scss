@@ -1,0 +1,183 @@
+// ========================================
+// LAYOUT - PALAVRAMOS
+// ========================================
+
+@import '../variables';
+@import '../mixins';
+
+// Header
+.header {
+  height: $header-height;
+  background-color: $color-surface;
+  border-bottom: 1px solid $color-border;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 $spacing-xl;
+
+  @include tablet {
+    padding: 0 $spacing-lg;
+  }
+}
+
+.header-title {
+  font-size: $font-size-h1;
+  font-weight: 700;
+  margin: 0;
+
+  @include tablet {
+    font-size: 1.5rem;
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+
+  @include tablet {
+    gap: $spacing-md;
+  }
+}
+
+.room-code {
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+  font-weight: 500;
+  padding: $spacing-sm $spacing-md;
+  background-color: $color-bg;
+  border-radius: $border-radius-sm;
+  border: 1px solid $color-border;
+}
+
+// Main container
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: $spacing-xl;
+
+  @include tablet {
+    padding: $spacing-lg;
+  }
+}
+
+// Game container
+.game-container {
+  display: flex;
+  height: calc(100vh - $header-height);
+  overflow: hidden;
+
+  @include desktop {
+    flex-direction: column;
+  }
+}
+
+.game-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xl;
+  overflow-y: auto;
+
+  @include custom-scrollbar;
+
+  @include tablet {
+    padding: $spacing-lg;
+  }
+}
+
+// Screens
+.screen {
+  display: none;
+
+  &.active {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.screen-content {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+// Menu
+.menu-container {
+  @include flex-column;
+  align-items: center;
+  gap: $spacing-xl;
+  padding: $spacing-2xl;
+
+  @include tablet {
+    padding: $spacing-xl;
+  }
+}
+
+.menu-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: $spacing-lg;
+
+  @include tablet {
+    font-size: 2rem;
+  }
+}
+
+.mode-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-lg;
+  width: 100%;
+  max-width: 700px;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mode-button {
+  @include card;
+  cursor: pointer;
+  transition: all $transition-normal;
+  text-align: center;
+  padding: $spacing-xl;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+    border-color: $color-primary;
+  }
+
+  &:active {
+    transform: translateY(-2px);
+  }
+}
+
+.mode-icon {
+  font-size: 3rem;
+  margin-bottom: $spacing-md;
+}
+
+.mode-name {
+  font-size: $font-size-h2;
+  font-weight: 600;
+  margin-bottom: $spacing-sm;
+}
+
+.mode-description {
+  font-size: $font-size-small;
+  color: $color-text-secondary;
+}
+
+// Progress indicator (Speedrun)
+.progress-indicator {
+  text-align: center;
+  margin-bottom: $spacing-lg;
+  font-size: $font-size-base;
+  color: $color-text-secondary;
+  font-weight: 500;
+}

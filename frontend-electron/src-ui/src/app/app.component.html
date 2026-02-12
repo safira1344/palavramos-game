@@ -1,0 +1,90 @@
+<div class="container">
+  <header class="header">
+    <h1 class="header-title">palavramos</h1>
+  </header>
+
+  <main class="screen-content">
+    <h2>Salas Disponíveis</h2>
+
+    <div class="input-group">
+      <input
+        type="text"
+        class="input"
+        placeholder="Buscar pelo ID da sala..."
+        [(ngModel)]="searchTerm"
+        (input)="filterRooms()">
+    </div>
+
+    <div class="room-list" *ngIf="filteredRooms.length > 0">
+      <div
+        *ngFor="let room of filteredRooms"
+        class="card card-interactive"
+        [class.selected]="room === selectedRoom"
+        (click)="selectRoom(room)">
+        <div class="flex-between">
+          <span class="room-name">{{ room.nome }}</span>
+          <span class="room-code">#{{ room.id }}</span>
+        </div>
+        <small class="room-privacy">{{ room.privacidade === 'fechada' ? '🔒 Privada' : '🌍 Pública' }}</small>
+      </div>
+    </div>
+
+    <div *ngIf="filteredRooms.length === 0" class="card text-center">
+      <p>Nenhuma sala disponível no momento.</p>
+      <small>Crie uma nova partida para começar!</small>
+    </div>
+  </main>
+
+  <footer class="footer-actions">
+    <div class="button-group">
+      <button
+        class="btn btn-primary"
+        (click)="logClick(); showCreateOptions = !showCreateOptions">
+        {{ showCreateOptions ? 'Cancelar' : 'Criar Partida' }}
+      </button>
+
+      <div *ngIf="showCreateOptions" class="card mt-md">
+        <h3>Nova Partida</h3>
+
+        <div class="input-group">
+          <label class="input-label">Seu nome</label>
+          <input
+            type="text"
+            class="input"
+            placeholder="Digite seu nome"
+            [(ngModel)]="newMatchPlayerName">
+        </div>
+
+        <div class="checkbox mb-md">
+          <input
+            type="checkbox"
+            id="isPrivate"
+            [(ngModel)]="newMatchIsPrivate">
+          <label for="isPrivate">Partida Privada</label>
+        </div>
+
+        <div class="mode-buttons">
+          <div class="mode-button" (click)="createMatch('Multiplayer')">
+            <div class="mode-icon">👥</div>
+            <div class="mode-name">Multiplayer</div>
+            <div class="mode-description">Todos adivinham a mesma palavra</div>
+          </div>
+          <div class="mode-button" (click)="createMatch('Speedrun')">
+            <div class="mode-icon">⚡</div>
+            <div class="mode-name">Speedrun</div>
+            <div class="mode-description">5 palavras seguidas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button
+      *ngIf="selectedRoom"
+      class="btn btn-primary btn-block mt-md"
+      (click)="enterRoom(selectedRoom)">
+      Entrar na Sala
+    </button>
+  </footer>
+</div>
+
+<router-outlet></router-outlet>
