@@ -1,0 +1,10 @@
+{
+  "name": "palavramos-multiplayer",
+  "version": "1.0.0",
+  "description": "palavramos",
+  "main": "server.js",
+  "keywords": ["palavramos", "game", "socket", "multiplayer"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}
